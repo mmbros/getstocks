@@ -2,11 +2,13 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"github.com/mmbros/getstocks/run"
 	"github.com/naoina/toml"
 )
 
@@ -32,25 +34,37 @@ type clArgs struct {
 }
 
 type configScraper struct {
-	Disabled bool
+	Name     string
 	Workers  int
-}
-
-type configStockSource struct {
-	ScraperKey string
-	URL        string
+	Disabled bool
 }
 
 type configStock struct {
-	Isin        string
 	Name        string
+	Isin        string
 	Description string
-	Sources     []configStockSource `toml:"sources"`
+	Disabled    bool
+	Sources     []configStockSource `toml:"source"`
+}
+
+type configStockSource struct {
+	Scraper  string
+	URL      string
+	Disabled bool
 }
 
 type config struct {
-	Scrapers map[string]configScraper `toml:"scrapers"`
-	Stocks   map[string]configStock   `toml:"stocks"`
+	Scrapers []*configScraper `toml:"scraper"`
+	Stocks   []*configStock   `toml:"stock"`
+}
+
+func (cfg *config) Print() {
+	for j, s := range cfg.Scrapers {
+		fmt.Printf("Scrapers[%d] %v\n", j, s)
+	}
+	for j, s := range cfg.Stocks {
+		fmt.Printf("\nStocks[%d] %v\n", j, s)
+	}
 }
 
 func unmarshalConfig(data []byte) (*config, error) {
@@ -59,6 +73,30 @@ func unmarshalConfig(data []byte) (*config, error) {
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
+
+	// check scrapers
+	setScrapers := NewSet()
+	for _, scraper := range cfg.Scrapers {
+		if len(scraper.Name) == 0 {
+			return nil, errors.New("Invalid scraper: name must be defined")
+		}
+		if !setScrapers.Add(scraper.Name) {
+			return nil, fmt.Errorf("Invalid scraper: name already used: %q", scraper.Name)
+		}
+	}
+
+	// check stocks
+	setStocks := NewSet()
+	for _, stock := range cfg.Stocks {
+		if len(stock.Name) == 0 {
+			return nil, errors.New("Invalid stock: name must be defined")
+		}
+		if !setStocks.Add(stock.Name) {
+			return nil, fmt.Errorf("Invalid stock: name already used: %q", stock.Name)
+		}
+
+	}
+
 	return &cfg, nil
 }
 
@@ -113,6 +151,57 @@ func parseConfig(args *clArgs) (*config, error) {
 	return cfg, nil
 }
 
+func getRunArgs(cfg *config) error {
+	disabledScrapers := NewSet()
+	workers := map[string]int{}
+	usedScrapers := map[string]*run.Scraper{}
+
+	for _, scr := range cfg.Scrapers {
+		if scr.Disabled {
+			disabledScrapers.Add(scr.Name)
+			continue
+		}
+		workers[scr.Name] = scr.Workers
+	}
+
+	for _, stock := range cfg.Stocks {
+		if stock.Disabled {
+			continue
+		}
+		for _, source := range stock.Sources {
+			if source.Disabled {
+				continue
+			}
+
+			// get the scraper type
+			scrapertype, err := run.ScraperTypeFromStringOrUrl(source.Scraper, source.URL)
+			if err != nil {
+				return err
+			}
+			// check if scraper name is disabled
+			scrapername := scrapertype.String()
+			if disabledScrapers.Contains(scrapername) {
+				continue
+			}
+			// add the scraper to the used scrapers, if not already in use
+			if _, ok := usedScrapers[scrapername]; !ok {
+				runscr, err := run.NewScraper(scrapertype, workers[scrapername])
+				if err != nil {
+					return err
+				}
+				usedScrapers[scrapername] = runscr
+			}
+		}
+	}
+
+	fmt.Println("------------------")
+	for name, scr := range usedScrapers {
+		fmt.Printf("%s -> %d\n", name, scr.Workers())
+	}
+
+	return nil
+}
+
 func Run() int {
 	const msghelp = "Try 'getstocks -h' for more information."
 
@@ -135,7 +224,12 @@ func Run() int {
 		fmt.Fprintln(os.Stderr, err.Error())
 		return 2
 	}
-	fmt.Printf("cfg = %+v\n", cfg)
+	cfg.Print()
+
+	err = getRunArgs(cfg)
+	if err != nil {
+		fmt.Println("XXXXXXXXX ", err)
+	}
 
 	return 0
 }
