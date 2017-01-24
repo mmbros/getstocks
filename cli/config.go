@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/mmbros/getstocks/run"
 	"github.com/naoina/toml"
 )
 
@@ -151,6 +150,7 @@ func parseConfig(args *clArgs) (*config, error) {
 	return cfg, nil
 }
 
+/*
 func getRunArgs(cfg *config) error {
 	disabledScrapers := NewSet()
 	workers := map[string]int{}
@@ -201,6 +201,7 @@ func getRunArgs(cfg *config) error {
 
 	return nil
 }
+*/
 
 func Run() int {
 	const msghelp = "Try 'getstocks -h' for more information."
@@ -226,10 +227,10 @@ func Run() int {
 	}
 	cfg.Print()
 
-	err = getRunArgs(cfg)
-	if err != nil {
-		fmt.Println("XXXXXXXXX ", err)
-	}
+	//err = getRunArgs(cfg)
+	//if err != nil {
+	//fmt.Println("XXXXXXXXX ", err)
+	//}
 
 	return 0
 }
