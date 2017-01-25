@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -40,8 +41,51 @@ type JobReplica struct {
 
 type Jobs map[JobKey][]*JobReplica
 
+type dispatchItem struct {
+	jobKey     JobKey
+	jobReplica *JobReplica
+}
+
+type dispatchItems []*dispatchItem
+
+type dispatcher map[*Scraper]dispatchItems
+
 //-----------------------------------------------------------------------------
 
+func (d dispatcher) Debug(w io.Writer) {
+	fmt.Fprintln(w, "DISPATCHER")
+	for _, items := range d {
+		fmt.Fprintf(w, "Scraper %q\n", items[0].jobReplica.ScraperKey)
+		for i, item := range items {
+			fmt.Fprintf(w, "  [%d] %q\n", i, item.jobKey)
+		}
+	}
+}
+
+func newSimpleDispatcher(scrapers Scrapers, jobs Jobs) dispatcher {
+
+	d := dispatcher(map[*Scraper]dispatchItems{})
+
+	for key, replicas := range jobs {
+
+		for _, replica := range replicas {
+			item := &dispatchItem{
+				jobKey:     key,
+				jobReplica: replica,
+			}
+			scr := scrapers[replica.ScraperKey]
+			items := d[scr]
+			if items == nil {
+				d[scr] = dispatchItems{item}
+				continue
+			}
+			d[scr] = append(items, item)
+		}
+
+	}
+
+	return d
+}
 func checkArgs(scrapers Scrapers, jobs Jobs) error {
 	if scrapers == nil {
 		return fmt.Errorf("Scrapers must not be nil.")
