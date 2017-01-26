@@ -85,4 +85,7 @@ func TestDispatcher(t *testing.T) {
 	buf := &bytes.Buffer{}
 	disp.Debug(buf)
 	t.Log(buf.String())
+
+	disp = disp.shuffle()
+	t.Log(buf.String())
 }

@@ -1,20 +1,23 @@
 package run
 
 import (
-	"fmt"
-	"io"
+	"context"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 //-----------------------------------------------------------------------------
-// generics types
+// Types to be customized if needed
 //-----------------------------------------------------------------------------
+
+// ScraperKey type definition.
 type ScraperKey string
 
+// JobKey type definition.
 type JobKey string
 
+// ParseResult represents the type of the value returned by the ParseDoc function.
 type ParseResult struct {
 	Price    float32
 	Date     time.Time
@@ -23,112 +26,65 @@ type ParseResult struct {
 }
 
 //-----------------------------------------------------------------------------
-// static types
+// Static types
 //-----------------------------------------------------------------------------
+
+// ParseDocFunc ...
 type ParseDocFunc func(*goquery.Document) (*ParseResult, error)
 
+// Scraper ...
 type Scraper struct {
 	Workers  int
 	ParseDoc ParseDocFunc
 }
 
+// Scrapers ...
 type Scrapers map[ScraperKey]*Scraper
 
+// JobReplica ...
 type JobReplica struct {
 	ScraperKey ScraperKey
 	URL        string
 }
 
+// Jobs ...
 type Jobs map[JobKey][]*JobReplica
 
+//-----------------------------------------------------------------------------
+// private types
+//-----------------------------------------------------------------------------
 type dispatchItem struct {
+	scraperKey ScraperKey
 	jobKey     JobKey
-	jobReplica *JobReplica
+	url        string
 }
 
 type dispatchItems []*dispatchItem
 
 type dispatcher map[*Scraper]dispatchItems
 
-//-----------------------------------------------------------------------------
-
-func (d dispatcher) Debug(w io.Writer) {
-	fmt.Fprintln(w, "DISPATCHER")
-	for _, items := range d {
-		fmt.Fprintf(w, "Scraper %q\n", items[0].jobReplica.ScraperKey)
-		for i, item := range items {
-			fmt.Fprintf(w, "  [%d] %q\n", i, item.jobKey)
-		}
-	}
+type workRequest struct {
+	ctx     context.Context
+	resChan chan *WorkResult
+	item    *dispatchItem
 }
 
-func newSimpleDispatcher(scrapers Scrapers, jobs Jobs) dispatcher {
-
-	d := dispatcher(map[*Scraper]dispatchItems{})
-
-	for key, replicas := range jobs {
-
-		for _, replica := range replicas {
-			item := &dispatchItem{
-				jobKey:     key,
-				jobReplica: replica,
-			}
-			scr := scrapers[replica.ScraperKey]
-			items := d[scr]
-			if items == nil {
-				d[scr] = dispatchItems{item}
-				continue
-			}
-			d[scr] = append(items, item)
-		}
-
-	}
-
-	return d
-}
-func checkArgs(scrapers Scrapers, jobs Jobs) error {
-	if scrapers == nil {
-		return fmt.Errorf("Scrapers must not be nil.")
-	}
-
-	// check jobs
-	for jk, replicas := range jobs {
-		if len(replicas) < 1 {
-			return fmt.Errorf("Invalid job: no replica found (job %q).", jk)
-		}
-		for ri, rv := range replicas {
-			// check replica != nil
-			if rv == nil {
-				return fmt.Errorf("Invalid job: replica cannot be nil (job %q, replica #%d).", jk, ri)
-			}
-			// check scraperKey exists in scrapers
-			if _, ok := scrapers[rv.ScraperKey]; !ok {
-				return fmt.Errorf("Invalid job: scraper key not found in scrapers (job %q, replica #%d, scraper %q).", jk, ri, rv.ScraperKey)
-			}
-		}
-	}
-
-	// check scrapers
-	for sk, sv := range scrapers {
-		if sv.Workers <= 0 {
-			return fmt.Errorf("Invalid scraper: Workers must be > 0 (scraper %q).", sk)
-		}
-		if sv.ParseDoc == nil {
-			return fmt.Errorf("Invalid scraper: ParseDoc cannot be nil (scraper %q).", sk)
-		}
-	}
-
-	return nil
+type scraperWorker struct {
+	key     ScraperKey
+	scraper *Scraper
+	index   int
 }
 
-func Execute(scrapers Scrapers, jobs Jobs) error {
-	if jobs == nil || len(jobs) == 0 {
-		// nothing to do!
-		return nil
-	}
-	// check args
-	if err := checkArgs(scrapers, jobs); err != nil {
-		return err
-	}
-	return nil
+type WorkResult struct {
+	dispatchItem
+	Res       *ParseResult
+	TimeStart time.Time
+	TimeEnd   time.Time
+	Err       error
+}
+
+type jobContext struct {
+	ctx     context.Context
+	cancel  context.CancelFunc
+	resChan chan *WorkResult
 }
