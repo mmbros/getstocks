@@ -29,7 +29,7 @@ func (disp dispatcher) Debug(w io.Writer) {
 	}
 }
 
-func (disp dispatcher) Shuffle() dispatcher {
+func (disp dispatcher) shuffle() dispatcher {
 	shuffleItems := func(src dispatchItems) dispatchItems {
 		dest := make(dispatchItems, len(src))
 		perm := rand.Perm(len(src))
@@ -49,7 +49,7 @@ func (disp dispatcher) Shuffle() dispatcher {
 	return d
 
 }
-func NewSimpleDispatcher(scrapers Scrapers, jobs Jobs) dispatcher {
+func newSimpleDispatcher(scrapers Scrapers, jobs Jobs) dispatcher {
 
 	d := dispatcher(map[*Scraper]dispatchItems{})
 
@@ -140,7 +140,7 @@ func Execute(ctx context.Context, scrapers Scrapers, jobs Jobs) (chan *WorkResul
 	}
 
 	// build dispatcher
-	disp := NewSimpleDispatcher(scrapers, jobs).Shuffle()
+	disp := newSimpleDispatcher(scrapers, jobs).shuffle()
 
 	// create a context with cancel and a result chan for each enabled stock
 	jobContexts := map[JobKey]*jobContext{}
