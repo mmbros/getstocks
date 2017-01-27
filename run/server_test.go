@@ -1,12 +1,16 @@
 package run
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func getMsec(smin, smax string, def int) int {
@@ -103,8 +107,15 @@ func TestReturnError(t *testing.T) {
 
 	t.Logf("Expecting %d errors , found %d errors on %d iters (diff=%d)", expect, count, iter, diff)
 }
+func initTestServer() *httptest.Server {
+
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	return httptest.NewServer(http.HandlerFunc(handlerTestServer))
+}
 
 func handlerTestServer(w http.ResponseWriter, r *http.Request) {
+
 	// msec1  = nvl(msec2, 100) if missing
 	// msec2  = msec1 if missing
 	// price  = msec sleeped
@@ -127,4 +138,26 @@ func handlerTestServer(w http.ResponseWriter, r *http.Request) {
 	price := msec
 	date := time.Now()
 	fmt.Fprintf(w, "<ul>\n  <li>Price: <b>%d</b></li>\n  <li>Date: <b>%s</b></li>\n</ul>", price, date)
+}
+
+func parseDocTest(doc *goquery.Document) (*ParseResult, error) {
+	var price, date string
+	var err error
+
+	doc.Find("ul > li > b").Each(func(i int, s *goquery.Selection) {
+		switch i {
+		case 0:
+			price = s.Text()
+		case 1:
+			date = s.Text()
+		}
+	})
+	if price == "" {
+		err = errors.New("Price not found")
+	}
+	res := &ParseResult{
+		PriceStr: price,
+		DateStr:  date,
+	}
+	return res, err
 }

@@ -25,6 +25,13 @@ type ParseResult struct {
 	DateStr  string
 }
 
+func (pr *ParseResult) String() string {
+	if pr == nil {
+		return "<nil>"
+	}
+	return pr.PriceStr
+}
+
 //-----------------------------------------------------------------------------
 // Static types
 //-----------------------------------------------------------------------------
@@ -83,6 +90,10 @@ type WorkResult struct {
 	TimeEnd    time.Time
 	Res        *ParseResult
 	Err        error
+}
+
+func (wr *WorkResult) Elapsed() time.Duration {
+	return wr.TimeEnd.Sub(wr.TimeStart)
 }
 
 type jobContext struct {
