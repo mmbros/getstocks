@@ -76,11 +76,13 @@ type scraperWorker struct {
 }
 
 type WorkResult struct {
-	dispatchItem
-	Res       *ParseResult
-	TimeStart time.Time
-	TimeEnd   time.Time
-	Err       error
+	ScraperKey ScraperKey
+	JobKey     JobKey
+	URL        string
+	TimeStart  time.Time
+	TimeEnd    time.Time
+	Res        *ParseResult
+	Err        error
 }
 
 type jobContext struct {

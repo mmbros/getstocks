@@ -1,10 +1,12 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/mmbros/getstocks/cli"
 	"github.com/mmbros/getstocks/run"
 )
@@ -13,8 +15,15 @@ func main2() {
 	os.Exit(cli.Run())
 }
 
+func parseDocA(*goquery.Document) (*run.ParseResult, error) {
+	res := &run.ParseResult{
+		PriceStr: "100.0",
+		DateStr:  "oggi",
+	}
+	return res, nil
+}
+
 func main() {
-	parseDocA := run.ParseDocFunc(nil)
 
 	scrapers := run.Scrapers{
 		"SITE_1": &run.Scraper{Workers: 1, ParseDoc: parseDocA},
@@ -36,14 +45,24 @@ func main() {
 			&run.JobReplica{ScraperKey: "SITE_3", URL: ""},
 		},
 	}
-	disp := run.NewSimpleDispatcher(scrapers, jobs)
+	//disp := run.NewSimpleDispatcher(scrapers, jobs)
 
-	buf := &bytes.Buffer{}
-	disp.Debug(buf)
-	fmt.Println(buf.String())
+	//buf := &bytes.Buffer{}
+	//disp.Debug(buf)
+	//fmt.Println(buf.String())
 
-	disp = disp.Shuffle()
-	disp.Debug(buf)
-	fmt.Println(buf.String())
+	//disp = disp.Shuffle()
+	//disp.Debug(buf)
+	//fmt.Println(buf.String())
+
+	ctx := context.Background()
+	c, err := run.Execute(ctx, scrapers, jobs)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for item := range c {
+		log.Printf("RESULT  %v\n", item)
+	}
 
 }
