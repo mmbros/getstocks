@@ -23,8 +23,8 @@ type JobKey string
 
 // Request inteface.
 type Request interface {
-	JobId() JobKey
-	WorkerId() WorkerKey
+	JobID() JobKey
+	WorkerID() WorkerKey
 }
 
 // Response is the interface that must be matched by the results of the Work function.
@@ -99,7 +99,7 @@ func newBasicDispatcher(ctx context.Context, workers []*Worker, requests []Reque
 	for _, r := range requests {
 
 		// updates worker queue
-		wid := r.WorkerId()
+		wid := r.WorkerID()
 		// get the worker queue, if exists
 		if wq, ok := d.workerQueue[wid]; ok {
 			// append the new request to the queue
@@ -107,14 +107,14 @@ func newBasicDispatcher(ctx context.Context, workers []*Worker, requests []Reque
 		} else {
 			// check if the worker exists
 			if _, ok := wm[wid]; !ok {
-				return nil, fmt.Errorf("Worker not found: worker=%q, job=%q", wid, r.JobId())
+				return nil, fmt.Errorf("Worker not found: worker=%q, job=%q", wid, r.JobID())
 			}
 			// create the worker queue
 			d.workerQueue[wid] = []Request{r}
 		}
 
 		// updates job contexts
-		jid := r.JobId()
+		jid := r.JobID()
 		jc := d.jobContext[jid]
 		if jc == nil {
 			jc = &jobContextItem{}
@@ -142,7 +142,7 @@ func (d *dispatcher) genWorkRequestChan(wid WorkerKey) chan *workRequest {
 	out := make(chan *workRequest)
 	go func() {
 		for _, item := range d.workerQueue[wid] {
-			jc := d.jobContext[item.JobId()]
+			jc := d.jobContext[item.JobID()]
 			wreq := &workRequest{
 				ctx:     jc.ctx,
 				resChan: jc.resChan,
@@ -170,6 +170,8 @@ func (jc *jobContextItem) getJobResponse(out chan Response) {
 				todo = false
 				jc.cancel()
 				out <- res
+				// XXX: inserted return statement: check it!!!
+				//return
 			}
 		case <-jc.ctx.Done():
 			jc.cancel()
