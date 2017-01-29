@@ -79,7 +79,72 @@ func TestExecute(t *testing.T) {
 			workerid: wid,
 			minMsec:  100,
 			maxMsec:  100,
-			percErr:  60,
+			percErr:  30,
+			t:        t,
+		}
+		return Request(treq)
+	}
+
+	workers := []*Worker{
+		&Worker{"worker_1", 1, fnWork},
+		&Worker{"worker_2", 1, fnWork},
+		&Worker{"worker_3", 1, fnWork},
+	}
+	/*
+		requests := []Request{
+			newreq("job_1", "worker_1"),
+			newreq("job_1", "worker_2"),
+			newreq("job_1", "worker_3"),
+			newreq("job_2", "worker_1"),
+			newreq("job_2", "worker_2"),
+			newreq("job_3", "worker_3"),
+			newreq("job_4", "worker_1"),
+			newreq("job_4", "worker_2"),
+			newreq("job_5", "worker_3"),
+			newreq("job_6", "worker_1"),
+			newreq("job_6", "worker_2"),
+			newreq("job_7", "worker_3"),
+		}
+	*/
+
+	requests := []Request{
+		newreq("job_1", "worker_1"),
+		newreq("job_2", "worker_2"),
+		newreq("job_3", "worker_3"),
+		newreq("job_4", "worker_1"),
+		newreq("job_6", "worker_2"),
+		newreq("job_5", "worker_3"),
+		newreq("job_2", "worker_1"),
+		newreq("job_1", "worker_2"),
+		newreq("job_7", "worker_3"),
+		newreq("job_6", "worker_1"),
+		newreq("job_4", "worker_2"),
+		newreq("job_1", "worker_3"),
+	}
+	ctx := context.Background()
+	out, err := Execute(ctx, workers, requests)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	for res := range out {
+		tres := res.(*testResponse)
+		t.Logf("RESULT: (%s, %s) -> %s - %s", tres.workerid, tres.jobid, tres.result, tres.Status())
+	}
+}
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
+
+func TestPrioritize(t *testing.T) {
+	newreq := func(jid string, wid string) Request {
+		treq := &testRequest{
+			jobid:    jid,
+			workerid: wid,
+			minMsec:  100,
+			maxMsec:  100,
+			percErr:  30,
 			t:        t,
 		}
 		return Request(treq)
@@ -104,19 +169,14 @@ func TestExecute(t *testing.T) {
 		newreq("job_6", "worker_2"),
 		newreq("job_7", "worker_3"),
 	}
-
-	ctx := context.Background()
-	out, err := Execute(ctx, workers, requests)
+	// Create the dispatcher
+	d, err := newBasicDispatcher(context.TODO(), workers, requests)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	for res := range out {
-		tres := res.(*testResponse)
-		t.Logf("RESULT: (%s, %s) -> %s - %s", tres.workerid, tres.jobid, tres.result, tres.Status())
-	}
-}
+	t.Logf("INPUT =  %s", d.workerRequests.String())
+	d.workerRequests.distribute()
+	t.Logf("OUTPUT =  %s", d.workerRequests.String())
 
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
 }

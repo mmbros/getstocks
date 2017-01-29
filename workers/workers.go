@@ -52,13 +52,14 @@ type jobContextItem struct {
 	cancel  context.CancelFunc
 	resChan chan Response
 }
+
 type dispatcher struct {
-	workerMap   map[WorkerKey]*Worker
-	workerQueue map[WorkerKey][]Request
-	jobContext  map[JobKey]*jobContextItem
+	workerMap      map[WorkerKey]*Worker
+	workerRequests mapWorkerRequests
+	jobContext     map[JobKey]*jobContextItem
 }
 
-type workRequest struct {
+type task struct {
 	ctx     context.Context
 	req     Request
 	resChan chan Response
@@ -74,7 +75,7 @@ type workRequest struct {
 
 func newBasicDispatcher(ctx context.Context, workers []*Worker, requests []Request) (*dispatcher, error) {
 
-	// check workers and map form workerId to Worker
+	// check workers and map form workerid to Worker
 	wm := map[WorkerKey]*Worker{}
 	for _, w := range workers {
 		if _, ok := wm[w.WorkerID]; ok {
@@ -90,9 +91,9 @@ func newBasicDispatcher(ctx context.Context, workers []*Worker, requests []Reque
 	}
 
 	d := &dispatcher{
-		workerMap:   wm,
-		workerQueue: map[WorkerKey][]Request{},
-		jobContext:  map[JobKey]*jobContextItem{},
+		workerMap:      wm,
+		workerRequests: mapWorkerRequests{},
+		jobContext:     map[JobKey]*jobContextItem{},
 	}
 
 	// check requests and init dispatcher
@@ -101,16 +102,16 @@ func newBasicDispatcher(ctx context.Context, workers []*Worker, requests []Reque
 		// updates worker queue
 		wid := r.WorkerID()
 		// get the worker queue, if exists
-		if wq, ok := d.workerQueue[wid]; ok {
+		if wr, ok := d.workerRequests[wid]; ok {
 			// append the new request to the queue
-			d.workerQueue[wid] = append(wq, r)
+			d.workerRequests[wid] = append(wr, r)
 		} else {
 			// check if the worker exists
 			if _, ok := wm[wid]; !ok {
 				return nil, fmt.Errorf("Worker not found: worker=%q, job=%q", wid, r.JobID())
 			}
 			// create the worker queue
-			d.workerQueue[wid] = []Request{r}
+			d.workerRequests[wid] = []Request{r}
 		}
 
 		// updates job contexts
@@ -137,13 +138,13 @@ func newBasicDispatcher(ctx context.Context, workers []*Worker, requests []Reque
 	return d, nil
 }
 
-// genWorkRequestChan returns a chan where are enqueued the workRequest for the worker
-func (d *dispatcher) genWorkRequestChan(wid WorkerKey) chan *workRequest {
-	out := make(chan *workRequest)
+// genTaskChan returns a chan where are enqueued the task for the worker
+func (d *dispatcher) genTaskChan(wid WorkerKey) chan *task {
+	out := make(chan *task)
 	go func() {
-		for _, item := range d.workerQueue[wid] {
+		for _, item := range d.workerRequests[wid] {
 			jc := d.jobContext[item.JobID()]
-			wreq := &workRequest{
+			wreq := &task{
 				ctx:     jc.ctx,
 				resChan: jc.resChan,
 				req:     item,
@@ -187,11 +188,13 @@ func Execute(ctx context.Context, workers []*Worker, requests []Request) (chan R
 	if err != nil {
 		return nil, err
 	}
+	//d.workerRequests.shuffle()
+	d.workerRequests.distribute()
 
-	// Generate a workRequest chan for each worker
-	reqChan := map[WorkerKey]chan *workRequest{}
-	for wid := range d.workerQueue {
-		reqChan[wid] = d.genWorkRequestChan(wid)
+	// Generate a task chan for each worker
+	reqChan := map[WorkerKey]chan *task{}
+	for wid := range d.workerRequests {
+		reqChan[wid] = d.genTaskChan(wid)
 	}
 
 	// Creates the output channel
@@ -224,7 +227,7 @@ func Execute(ctx context.Context, workers []*Worker, requests []Request) (chan R
 		// for each worker instances
 		for i := 0; i < worker.Instances; i++ {
 
-			go func(w *Worker, input <-chan *workRequest) {
+			go func(w *Worker, input <-chan *task) {
 				for wreq := range input {
 					wreq.resChan <- w.Work(wreq.ctx, wreq.req)
 				}
