@@ -1,4 +1,4 @@
-// Package cli provides a CLI UI for the gentmpl command line tool.
+// Package cli provides a CLI UI for the getstocks command line tool.
 package cli
 
 import (
@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/mmbros/getstocks/run"
 	"github.com/naoina/toml"
 )
 
@@ -20,7 +21,7 @@ const (
 	clOutput    = "o"
 
 	// default values
-	defaultConfigFile = "getstocks.cfg"
+	defaultConfigFile = "data-crypt/getstocks.cfg"
 	defaultOutputFile = "" // if empty use StdOut
 )
 
@@ -43,6 +44,7 @@ type configStock struct {
 	Isin        string
 	Description string
 	Disabled    bool
+	Urls        []string            `toml:"urls"`
 	Sources     []configStockSource `toml:"source"`
 }
 
@@ -150,11 +152,12 @@ func parseConfig(args *clArgs) (*config, error) {
 	return cfg, nil
 }
 
-/*
-func getRunArgs(cfg *config) error {
+func getRunArgs(cfg *config) ([]*run.Scraper, []*run.Stock, error) {
 	disabledScrapers := NewSet()
 	workers := map[string]int{}
-	usedScrapers := map[string]*run.Scraper{}
+	//usedScrapers := map[string]*run.Scraper{}
+
+	stocks := make([]*run.Stock, 0, len(cfg.Stocks))
 
 	for _, scr := range cfg.Scrapers {
 		if scr.Disabled {
@@ -164,44 +167,78 @@ func getRunArgs(cfg *config) error {
 		workers[scr.Name] = scr.Workers
 	}
 
+	// Builds the stock array skipping only the esplicitly disabled stocks.
+	// Stocks not disabled will be added even if without any valid source
+	// in order to considered in the output result.
 	for _, stock := range cfg.Stocks {
 		if stock.Disabled {
 			continue
 		}
+
+		// build array of StockSource from urls and sources
+		asrc := make([]*run.StockSource, 0, len(stock.Sources)+len(stock.Urls))
+
+		// check stock.sources
 		for _, source := range stock.Sources {
 			if source.Disabled {
 				continue
 			}
 
-			// get the scraper type
-			scrapertype, err := run.ScraperTypeFromStringOrUrl(source.Scraper, source.URL)
-			if err != nil {
-				return err
+			// check scraper name
+			if source.Scraper == "" {
+				var err error
+				source.Scraper, err = run.GetScraperFromUrl(source.URL)
+				if err != nil {
+					return nil, nil, err
+				}
 			}
-			// check if scraper name is disabled
-			scrapername := scrapertype.String()
-			if disabledScrapers.Contains(scrapername) {
+			// skip if scraper is disabled
+			if disabledScrapers.Contains(source.Scraper) {
 				continue
 			}
-			// add the scraper to the used scrapers, if not already in use
-			if _, ok := usedScrapers[scrapername]; !ok {
-				runscr, err := run.NewScraper(scrapertype, workers[scrapername])
-				if err != nil {
-					return err
-				}
-				usedScrapers[scrapername] = runscr
-			}
+			// append the new source to the list
+			asrc = append(asrc, &run.StockSource{
+				Scraper: source.Scraper,
+				URL:     source.URL,
+			})
 		}
+
+		// check stock.urls
+		for _, url := range stock.Urls {
+			scraper, err := run.GetScraperFromUrl(url)
+			if err != nil {
+				return nil, nil, err
+			}
+			// skip if scraper is disabled
+			if disabledScrapers.Contains(scraper) {
+				continue
+			}
+			// append the new source to the list
+			asrc = append(asrc, &run.StockSource{
+				Scraper: scraper,
+				URL:     url,
+			})
+		}
+		// append the stock
+		stocks = append(stocks, &run.Stock{
+			Name:        stock.Name,
+			Isin:        stock.Isin,
+			Description: stock.Description,
+			Sources:     asrc,
+		})
 	}
 
-	fmt.Println("------------------")
-	for name, scr := range usedScrapers {
-		fmt.Printf("%s -> %d\n", name, scr.Workers())
+	// build scrapers array (only)
+	scrapers := make([]*run.Scraper, 0, len(workers))
+	for name, workers := range workers {
+		scrapers = append(scrapers, &run.Scraper{
+			Name:    name,
+			Workers: workers,
+		})
 	}
 
-	return nil
+	return scrapers, stocks, nil
 }
-*/
 
 func Run() int {
 	const msghelp = "Try 'getstocks -h' for more information."
@@ -227,10 +264,22 @@ func Run() int {
 	}
 	cfg.Print()
 
-	//err = getRunArgs(cfg)
-	//if err != nil {
-	//fmt.Println("XXXXXXXXX ", err)
-	//}
+	scrapers, stocks, err := getRunArgs(cfg)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return 2
+	}
+	fmt.Println("**** SCRAPERS *****")
+	for i, s := range scrapers {
+		fmt.Printf("[%d] %+v\n", i+1, s)
+	}
+	fmt.Println("**** STOCKS  *****")
+	for i, s := range stocks {
+		fmt.Printf("[%d] %-20s  (%s)\n", i+1, s.Name, s.Isin)
+		for _, src := range s.Sources {
+			fmt.Printf("    - %s\n", src.URL)
+		}
+	}
 
 	return 0
 }
