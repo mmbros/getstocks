@@ -2,7 +2,12 @@ package run
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	neturl "net/url"
+	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Scraper struct {
@@ -22,8 +27,85 @@ type StockSource struct {
 	URL     string
 }
 
+// ----------------------------------------------------------------------------
+/*
+// Request inteface.
+type Request interface {
+	JobID() JobKey
+	WorkerID() WorkerKey
+}
+
+// Response is the interface that must be matched by the results of the Work function.
+type Response interface {
+	// Success return true in case of a success response.
+	// In this case no other Request will be worked for the same Job.
+	Success() bool
+}
+
+// WorkFunc is the worker function.
+type WorkFunc func(context.Context, Request) Response
+
+// Worker is ...
+type Worker struct {
+	WorkerID  WorkerKey
+	Instances int
+	Work      WorkFunc
+}
+*/
+type request struct {
+	scraperName string
+	stockName   string
+	URL         string
+}
+
+func (req *request) WorkerID() string { return req.scraperName }
+func (req *request) JobID() string    { return req.stockName }
+
+type Response struct {
+	ScraperName string
+	StockName   string
+	URL         string
+	PriceStr    string
+	DateStr     string
+	Price       float32
+	Date        time.Time
+	Err         error
+}
+
+func (res *Response) Success() bool { return res.Err == nil }
+
+// ----------------------------------------------------------------------------
+
+type parseDocFunc func(doc *goquery.Document) error
+
+func getParseDocFunc(scraperName string) parseDocFunc {
+	var m = map[string]parseDocFunc{
+	//"finanza.repubblica.it"
+	//"it.finance.yahoo.com"
+	//"www.borse.it"
+	//"www.eurotlx.com"
+	//"www.milanofinanza.it"
+	//"www.morningstar.it"
+	//"www.mpscapitalservices.it"
+	//"www.teleborsa.it"
+	}
+	return m[scraperName]
+}
+
+// ----------------------------------------------------------------------------
+
 func GetScraperFromUrl(url string) (string, error) {
-	return "", nil
+	// get the host form url
+	u, err := neturl.Parse(url)
+	if err != nil {
+		return "", err
+	}
+	name := u.Host
+	// check if to the name corresponds a ParseDocFunc
+	if getParseDocFunc(name) == nil {
+		return "", fmt.Errorf("No scraper found for url %q", url)
+	}
+	return name, nil
 }
 
 func GetUrl(ctx context.Context, url string) (*http.Response, error) {
