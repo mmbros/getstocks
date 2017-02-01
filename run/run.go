@@ -6,8 +6,6 @@ import (
 	"net/http"
 	neturl "net/url"
 	"time"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
 type Scraper struct {
@@ -73,24 +71,6 @@ type Response struct {
 }
 
 func (res *Response) Success() bool { return res.Err == nil }
-
-// ----------------------------------------------------------------------------
-
-type parseDocFunc func(doc *goquery.Document) error
-
-func getParseDocFunc(scraperName string) parseDocFunc {
-	var m = map[string]parseDocFunc{
-	//"finanza.repubblica.it"
-	//"it.finance.yahoo.com"
-	//"www.borse.it"
-	//"www.eurotlx.com"
-	//"www.milanofinanza.it"
-	//"www.morningstar.it"
-	//"www.mpscapitalservices.it"
-	//"www.teleborsa.it"
-	}
-	return m[scraperName]
-}
 
 // ----------------------------------------------------------------------------
 

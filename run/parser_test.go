@@ -2,10 +2,23 @@ package run
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+// getpath returns the relative path to the file "data-crypt/doc/<fname>".
+// first it assumes the current working directory is the "getstock" folder.
+// if the file does not exists, assumes the working directory is the "getstock/run" folder.
+func getpath(fname string) string {
+	const prefix = "data-crypt/doc"
+	p := filepath.Join(prefix, fname)
+	if _, err := os.Stat(p); err == nil {
+		return p
+	}
+	return filepath.Join("..", prefix, fname)
+}
 
 func newDocumentFromFile(path string) (*goquery.Document, error) {
 
@@ -18,25 +31,43 @@ func newDocumentFromFile(path string) (*goquery.Document, error) {
 	return goquery.NewDocumentFromReader(f)
 }
 
-func TestFinanzaRepubblicaIt(t *testing.T) {
-	path := "/home/mau/Code/go/src/github.com/mmbros/getstocks/data-crypt/doc/finanza.repubblica.it.html"
-	doc, err := newDocumentFromFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	res, err := parseFinanzaRepubblicaIt(doc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(res)
+func TestParsers(t *testing.T) {
 
-	expectedPriceStr := "90,680"
-	expectedDateStr := "22/12/2016"
-	if res.PriceStr != expectedPriceStr {
-		t.Errorf("PriceStr: expected %q, found %q", expectedPriceStr, res.PriceStr)
+	testCases := []struct {
+		scraper  string
+		priceStr string
+		dateStr  string
+	}{
+		{"finanza.repubblica.it", "90,680", "22/12/2016"},
+		{"www.borse.it", "5,3600", "20/01/2017"},
+		{"www.eurotlx.com", "90,68", "30-01-2017"},
+		{"www.milanofinanza.it", "5,048", "20/01/17 1.00.00"},
+		{"www.morningstar.it", "5,158", "27/01/2017"},
+		{"www.teleborsa.it", "5,368", "27/01/2017"},
 	}
-	if res.DateStr != expectedDateStr {
-		t.Errorf("DateStr: expected %q, found %q", expectedDateStr, res.DateStr)
+
+	for _, tc := range testCases {
+
+		path := getpath(tc.scraper + ".html")
+		doc, err := newDocumentFromFile(path)
+		if err != nil {
+			t.Error(tc.scraper, err)
+			continue
+		}
+		parseFunc := getParseDocFunc(tc.scraper)
+		res, err := parseFunc(doc)
+		if err != nil {
+			t.Error(tc.scraper, err)
+			continue
+		}
+		t.Log(tc.scraper, "->", res)
+
+		if res.PriceStr != tc.priceStr {
+			t.Errorf("[%s] PriceStr: expected %q, found %q", tc.scraper, tc.priceStr, res.PriceStr)
+		}
+		if res.DateStr != tc.dateStr {
+			t.Errorf("[%s] DateStr: expected %q, found %q", tc.scraper, tc.dateStr, res.DateStr)
+		}
 	}
 
 }
