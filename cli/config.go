@@ -2,6 +2,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -175,43 +176,46 @@ func getRunArgs(cfg *config) ([]*run.Scraper, []*run.Stock, error) {
 			continue
 		}
 
-		// build array of StockSource from urls and sources
+		// Builds array of StockSource from urls and sources.
 		asrc := make([]*run.StockSource, 0, len(stock.Sources)+len(stock.Urls))
 
-		// check stock.sources
+		// Checks stock.sources.
 		for _, source := range stock.Sources {
+			var err error
 			if source.Disabled {
 				continue
 			}
 
-			// check scraper name
+			// Gets scraper name, if empty.
 			if source.Scraper == "" {
-				var err error
 				source.Scraper, err = run.GetScraperFromUrl(source.URL)
-				if err != nil {
-					return nil, nil, err
-				}
+				//log.Printf("GetScraperFromUrl(%q) -> %s, %v", source.URL, source.Scraper, err)
 			}
-			// skip if scraper is disabled
+			// Skip if scraper is disabled.
 			if disabledScrapers.Contains(source.Scraper) {
 				continue
 			}
-			// append the new source to the list
+			// Checks error eventually returned by GetScraperFromUrl.
+			if err != nil {
+				return nil, nil, err
+			}
+			// Append the new source to the list.
 			asrc = append(asrc, &run.StockSource{
 				Scraper: source.Scraper,
 				URL:     source.URL,
 			})
 		}
 
-		// check stock.urls
+		// Check stock.urls.
 		for _, url := range stock.Urls {
 			scraper, err := run.GetScraperFromUrl(url)
-			if err != nil {
-				return nil, nil, err
-			}
 			// skip if scraper is disabled
 			if disabledScrapers.Contains(scraper) {
 				continue
+			}
+			// Checks error eventually returned by GetScraperFromUrl.
+			if err != nil {
+				return nil, nil, err
 			}
 			// append the new source to the list
 			asrc = append(asrc, &run.StockSource{
@@ -269,6 +273,7 @@ func Run() int {
 		fmt.Fprintln(os.Stderr, err.Error())
 		return 2
 	}
+
 	fmt.Println("**** SCRAPERS *****")
 	for i, s := range scrapers {
 		fmt.Printf("[%d] %+v\n", i+1, s)
@@ -279,6 +284,17 @@ func Run() int {
 		for _, src := range s.Sources {
 			fmt.Printf("    - %s\n", src.URL)
 		}
+	}
+
+	ctx := context.Background()
+	out, err := run.Execute(ctx, scrapers, stocks)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return 1
+	}
+	for response := range out {
+		fmt.Printf("response = %+v\n", response)
 	}
 
 	return 0
