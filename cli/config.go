@@ -77,7 +77,7 @@ func unmarshalConfig(data []byte) (*config, error) {
 	}
 
 	// check scrapers
-	setScrapers := NewSet()
+	setScrapers := run.NewSet()
 	for _, scraper := range cfg.Scrapers {
 		if len(scraper.Name) == 0 {
 			return nil, errors.New("Invalid scraper: name must be defined")
@@ -88,7 +88,7 @@ func unmarshalConfig(data []byte) (*config, error) {
 	}
 
 	// check stocks
-	setStocks := NewSet()
+	setStocks := run.NewSet()
 	for _, stock := range cfg.Stocks {
 		if len(stock.Name) == 0 {
 			return nil, errors.New("Invalid stock: name must be defined")
@@ -154,7 +154,7 @@ func parseConfig(args *clArgs) (*config, error) {
 }
 
 func getRunArgs(cfg *config) ([]*run.Scraper, []*run.Stock, error) {
-	disabledScrapers := NewSet()
+	disabledScrapers := run.NewSet()
 	workers := map[string]int{}
 	//usedScrapers := map[string]*run.Scraper{}
 

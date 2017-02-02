@@ -178,10 +178,16 @@ func scraperWorkFunc(ctx context.Context, wreq workers.Request) workers.Response
 }
 
 func Execute(ctx context.Context, scrapers []*Scraper, stocks []*Stock) (<-chan *Response, error) {
+	usedWorkers := NewSet()
 
 	// init list of workers.Worker
 	wrks := make([]*workers.Worker, 0, len(scrapers))
 	for _, scr := range scrapers {
+		if !usedWorkers.Add(scr.Name) {
+			// duplicate Scraper
+			return nil, fmt.Errorf("Duplicate scraper %q", scr.Name)
+		}
+
 		w := &workers.Worker{
 			WorkerID:  workers.WorkerKey(scr.Name),
 			Instances: scr.Workers,
@@ -195,12 +201,30 @@ func Execute(ctx context.Context, scrapers []*Scraper, stocks []*Stock) (<-chan 
 	reqs := make([]workers.Request, 0, 3*len(stocks))
 	for _, stock := range stocks {
 		for _, src := range stock.Sources {
+
+			// check source's scraper
+			if usedWorkers.Add(src.Scraper) {
+				w := &workers.Worker{
+					WorkerID:  workers.WorkerKey(src.Scraper),
+					Instances: 1,
+					Work:      scraperWorkFunc,
+				}
+				wrks = append(wrks, w)
+			}
+
 			r := &request{
 				scraperName: src.Scraper,
 				stockName:   stock.Name,
 				URL:         src.URL,
 			}
 			reqs = append(reqs, r)
+		}
+	}
+	// check scraper exists !!!
+	for _, w := range wrks {
+		name := string(w.WorkerID)
+		if getParseDocFunc(name) == nil {
+			return nil, fmt.Errorf("Scraper not found: %q", name)
 		}
 	}
 

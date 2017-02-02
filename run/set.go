@@ -1,4 +1,4 @@
-package cli
+package run
 
 type set map[string]struct{}
 
