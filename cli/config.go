@@ -244,6 +244,20 @@ func getRunArgs(cfg *config) ([]*run.Scraper, []*run.Stock, error) {
 	return scrapers, stocks, nil
 }
 
+func doJob(scrapers []*run.Scraper, stocks []*run.Stock) error {
+
+	ctx := context.Background()
+	out, err := run.Execute(ctx, scrapers, stocks)
+
+	if err != nil {
+		return err
+	}
+	for r := range out {
+		fmt.Printf("%-20s  %4.3f %s\n", r.StockName, r.Result.Price, r.Result.Date.Format("02/01/2006"))
+	}
+	return nil
+}
+
 func Run() int {
 	const msghelp = "Try 'getstocks -h' for more information."
 
@@ -274,27 +288,21 @@ func Run() int {
 		return 2
 	}
 
-	fmt.Println("**** SCRAPERS *****")
-	for i, s := range scrapers {
-		fmt.Printf("[%d] %+v\n", i+1, s)
-	}
-	fmt.Println("**** STOCKS  *****")
-	for i, s := range stocks {
-		fmt.Printf("[%d] %-20s  (%s)\n", i+1, s.Name, s.Isin)
-		for _, src := range s.Sources {
-			fmt.Printf("    - %s\n", src.URL)
-		}
-	}
-
-	ctx := context.Background()
-	out, err := run.Execute(ctx, scrapers, stocks)
-
+	//fmt.Println("**** SCRAPERS *****")
+	//for i, s := range scrapers {
+	//fmt.Printf("[%d] %+v\n", i+1, s)
+	//}
+	//fmt.Println("**** STOCKS  *****")
+	//for i, s := range stocks {
+	//fmt.Printf("[%d] %-20s  (%s)\n", i+1, s.Name, s.Isin)
+	//for _, src := range s.Sources {
+	//fmt.Printf("    - %s\n", src.URL)
+	//}
+	//}
+	err = doJob(scrapers, stocks)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		return 1
-	}
-	for response := range out {
-		fmt.Printf("response = %+v\n", response)
 	}
 
 	return 0
