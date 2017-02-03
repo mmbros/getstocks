@@ -35,38 +35,40 @@ func TestParsers(t *testing.T) {
 
 	testCases := []struct {
 		scraper  string
+		filename string
 		priceStr string
 		dateStr  string
 	}{
-		{"finanza.repubblica.it", "90,680", "22/12/2016"},
-		{"www.borse.it", "5,3600", "20/01/2017"},
-		{"www.eurotlx.com", "90,68", "30-01-2017"},
-		{"www.milanofinanza.it", "5,048", "20/01/17 1.00.00"},
-		{"www.morningstar.it", "5,158", "27/01/2017"},
-		{"www.teleborsa.it", "5,368", "27/01/2017"},
+		{"finanza.repubblica.it", "finanza.repubblica.it.html", "90,680", "22/12/2016"},
+		{"www.borse.it", "www.borse.it.html", "5,3600", "20/01/2017"},
+		{"www.eurotlx.com", "www.eurotlx.com.html", "90,68", "30-01-2017"},
+		{"www.milanofinanza.it", "www.milanofinanza.it.IT0004009673.html", "113,19", "03/02/17 18.02.03"},
+		{"www.milanofinanza.it", "www.milanofinanza.it.IT0004977085.html", "5,052", "27/01/17 1.00.00"},
+		{"www.milanofinanza.it", "www.milanofinanza.it.html", "5,048", "20/01/17 1.00.00"},
+		{"www.morningstar.it", "www.morningstar.it.html", "5,158", "27/01/2017"},
+		{"www.teleborsa.it", "www.teleborsa.it.html", "5,368", "27/01/2017"},
 	}
-
 	for _, tc := range testCases {
 
-		path := getpath(tc.scraper + ".html")
+		path := getpath(tc.filename)
 		doc, err := newDocumentFromFile(path)
 		if err != nil {
-			t.Error(tc.scraper, err)
+			t.Error(tc.filename, err)
 			continue
 		}
 		parseFunc := getParseDocFunc(tc.scraper)
 		res, err := parseFunc(doc)
 		if err != nil {
-			t.Error(tc.scraper, err)
+			t.Error(tc.filename, err)
 			continue
 		}
-		t.Log(tc.scraper, "->", res)
+		t.Log(tc.filename, "->", res)
 
 		if res.PriceStr != tc.priceStr {
-			t.Errorf("[%s] PriceStr: expected %q, found %q", tc.scraper, tc.priceStr, res.PriceStr)
+			t.Errorf("[%s] PriceStr: expected %q, found %q", tc.filename, tc.priceStr, res.PriceStr)
 		}
 		if res.DateStr != tc.dateStr {
-			t.Errorf("[%s] DateStr: expected %q, found %q", tc.scraper, tc.dateStr, res.DateStr)
+			t.Errorf("[%s] DateStr: expected %q, found %q", tc.filename, tc.dateStr, res.DateStr)
 		}
 	}
 

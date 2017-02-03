@@ -119,19 +119,15 @@ func parseWwwEurotlxCom(doc *goquery.Document) (*parseResult, error) {
 	return res, nil
 }
 
-// <span class="info font22 ">5,048</span>
-// <div class="mtop10 bgees mbottom5"><span class="cred"> 20/01/17 1.00.00 </span>
+//<div class="fleft mright10"><span><span class="info font22 ">113,19</span>
+//<div class="fleft w65 taright bold"><span class="cred font12 taright">-0,0618</span>
+//<div class="mtop10 bgees mbottom5"><span class="cred"> 03/02/17 18.02.03 </span>
+
 func parseWwwMilanofinanzaIt(doc *goquery.Document) (*parseResult, error) {
 	res := &parseResult{}
 
-	doc.Find(".font22").EachWithBreak(func(i int, s *goquery.Selection) bool {
-		res.PriceStr = s.Text()
-		return false
-	})
-	doc.Find("span.cred").EachWithBreak(func(i int, s *goquery.Selection) bool {
-		res.DateStr = strings.TrimSpace(s.Text())
-		return false
-	})
+	res.PriceStr = doc.Find(".font22").Text()
+	res.DateStr = strings.TrimSpace(doc.Find("div.mbottom5 span.cred").Text())
 
 	if err := res.setPriceAndDate("02/01/06 15.04.05"); err != nil {
 		return nil, err
