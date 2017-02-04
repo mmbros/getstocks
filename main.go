@@ -9,7 +9,7 @@ import (
 
 func initLog(filename string) *os.File {
 	path := filename
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0755)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0640)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"path":  path,
@@ -24,9 +24,11 @@ func initLog(filename string) *os.File {
 
 func main() {
 	logfile := initLog("getstocks.log")
+	log.Infof("PROGRAM START")
+	res := cli.Run()
+	log.Infof("PROGRAM FINISH")
 	if logfile != nil {
-		defer logfile.Close()
+		logfile.Close()
 	}
-	os.Exit(cli.Run())
-
+	os.Exit(res)
 }

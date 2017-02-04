@@ -35,7 +35,7 @@ type Response interface {
 }
 
 // WorkFunc is the worker function.
-type WorkFunc func(context.Context, Request) Response
+type WorkFunc func(context.Context, int, Request) Response
 
 // Worker is ...
 type Worker struct {
@@ -227,11 +227,11 @@ func Execute(ctx context.Context, workers []*Worker, requests []Request) (chan R
 		// for each worker instances
 		for i := 0; i < worker.Instances; i++ {
 
-			go func(w *Worker, input <-chan *task) {
+			go func(w *Worker, workerInst int, input <-chan *task) {
 				for wreq := range input {
-					wreq.resChan <- w.Work(wreq.ctx, wreq.req)
+					wreq.resChan <- w.Work(wreq.ctx, workerInst, wreq.req)
 				}
-			}(worker, reqc)
+			}(worker, i, reqc)
 
 		}
 	}

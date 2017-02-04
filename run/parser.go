@@ -16,7 +16,7 @@ type parseResult struct {
 	Date     time.Time
 }
 
-type parseDocFunc func(doc *goquery.Document) (*parseResult, error)
+type parseDocFunc func(doc *goquery.Document) (parseResult, error)
 
 func getParseDocFunc(scraperName string) parseDocFunc {
 	var m = map[string]parseDocFunc{
@@ -64,8 +64,8 @@ func (pr *parseResult) setPriceAndDate(layout string) error {
 
 // ============================================================================
 
-func parseFinanzaRepubblicaIt(doc *goquery.Document) (*parseResult, error) {
-	res := &parseResult{}
+func parseFinanzaRepubblicaIt(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
 
 	doc.Find("div.TLB-scheda-body-container > ul > li:first-child > b ").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		switch i {
@@ -79,7 +79,7 @@ func parseFinanzaRepubblicaIt(doc *goquery.Document) (*parseResult, error) {
 	})
 
 	if err := res.setPriceAndDate("02/01/2006"); err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }
@@ -98,8 +98,8 @@ func parseFinanzaRepubblicaIt(doc *goquery.Document) (*parseResult, error) {
       <td>30-01-2017</td>
     </tr>
 */
-func parseWwwEurotlxCom(doc *goquery.Document) (*parseResult, error) {
-	res := &parseResult{}
+func parseWwwEurotlxCom(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
 
 	doc.Find("td.table_label").EachWithBreak(func(i int, s *goquery.Selection) bool {
 
@@ -114,7 +114,7 @@ func parseWwwEurotlxCom(doc *goquery.Document) (*parseResult, error) {
 	})
 
 	if err := res.setPriceAndDate("02-01-2006"); err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }
@@ -123,14 +123,14 @@ func parseWwwEurotlxCom(doc *goquery.Document) (*parseResult, error) {
 //<div class="fleft w65 taright bold"><span class="cred font12 taright">-0,0618</span>
 //<div class="mtop10 bgees mbottom5"><span class="cred"> 03/02/17 18.02.03 </span>
 
-func parseWwwMilanofinanzaIt(doc *goquery.Document) (*parseResult, error) {
-	res := &parseResult{}
+func parseWwwMilanofinanzaIt(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
 
 	res.PriceStr = doc.Find(".font22").Text()
 	res.DateStr = strings.TrimSpace(doc.Find("div.mbottom5 span.cred").Text())
 
 	if err := res.setPriceAndDate("02/01/06 15.04.05"); err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }
@@ -155,8 +155,8 @@ func parseWwwMilanofinanzaIt(doc *goquery.Document) (*parseResult, error) {
 //<li class="titolo">Tipologia</li>
 //<li class="descr przAcq">F. Comuni<li>
 //</ul>
-func parseWwwBorseIt(doc *goquery.Document) (*parseResult, error) {
-	res := &parseResult{}
+func parseWwwBorseIt(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
 
 	doc.Find("div.schede > ul > li.descr").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		switch i {
@@ -170,7 +170,7 @@ func parseWwwBorseIt(doc *goquery.Document) (*parseResult, error) {
 	})
 
 	if err := res.setPriceAndDate("02/01/2006"); err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }
@@ -198,14 +198,14 @@ func parseWwwBorseIt(doc *goquery.Document) (*parseResult, error) {
 //</div>
 //
 //</div>
-func parseWwwTeleborsaIt(doc *goquery.Document) (*parseResult, error) {
-	res := &parseResult{}
+func parseWwwTeleborsaIt(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
 
 	res.PriceStr = doc.Find("#ctl00_phContents_ctlHeader_lblPrice").Text()
 	res.DateStr = doc.Find("#ctl00_phContents_ctlHeader_pnlHeaderBottom strong").Text()
 
 	if err := res.setPriceAndDate("02/01/2006"); err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }
@@ -216,8 +216,8 @@ func parseWwwTeleborsaIt(doc *goquery.Document) (*parseResult, error) {
 //       <td class="line"> </td>
 //       <td class="line text">EUR 5,158</td></tr>
 //   <tr><td class="line heading">Var.Ultima Quotazione</td><td class="line"> </td><td class="line text">-0,04%
-func parseWwwMorningstarIt(doc *goquery.Document) (*parseResult, error) {
-	res := &parseResult{}
+func parseWwwMorningstarIt(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
 
 	doc.Find("table.overviewKeyStatsTable td").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		switch i {
@@ -231,7 +231,7 @@ func parseWwwMorningstarIt(doc *goquery.Document) (*parseResult, error) {
 	})
 
 	if err := res.setPriceAndDate("02/01/2006"); err != nil {
-		return nil, err
+		return res, err
 	}
 	return res, nil
 }

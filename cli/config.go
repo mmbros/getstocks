@@ -262,9 +262,9 @@ func doJob(scrapers []*run.Scraper, stocks []*run.Stock) error {
 	for _, r := range results {
 		var sPrice, sDate string
 
-		if r.Result != nil {
-			sPrice = fmt.Sprintf("%.3f", r.Result.Price)
-			sDate = r.Result.Date.Format("02-01-2006")
+		if r.Err == nil {
+			sPrice = fmt.Sprintf("%.3f", r.Price)
+			sDate = r.Date.Format("02-01-2006")
 		}
 		fmt.Printf("%-20s %10s  %15s  (%s) %v\n", r.StockName, sPrice, sDate, r.ScraperName, r.Err)
 	}

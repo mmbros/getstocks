@@ -18,10 +18,11 @@ type testRequest struct {
 	t        *testing.T
 }
 type testResponse struct {
-	jobid    string
-	workerid string
-	result   string
-	err      error
+	jobid      string
+	workerid   string
+	workerinst int
+	result     string
+	err        error
 }
 
 func (req *testRequest) JobID() JobKey       { return JobKey(req.jobid) }
@@ -45,16 +46,17 @@ func randInt(a, b int) int {
 	return a + rand.Intn(b-a)
 }
 
-func fnWork(ctx context.Context, req Request) Response {
+func fnWork(ctx context.Context, workerInst int, req Request) Response {
 
 	treq := req.(*testRequest)
 
 	msec := randInt(treq.minMsec, treq.maxMsec)
 
 	tres := &testResponse{
-		jobid:    treq.jobid,
-		workerid: treq.workerid,
-		result:   fmt.Sprintf("%dms", msec),
+		jobid:      treq.jobid,
+		workerid:   treq.workerid,
+		workerinst: workerInst,
+		result:     fmt.Sprintf("%dms", msec),
 	}
 
 	select {

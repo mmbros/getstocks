@@ -1,43 +1,38 @@
 package workers
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 	"strings"
+	"testing"
 )
 
 type requests []string
 type workerRequests map[string]requests
 type jobWorkers map[string][]string
 
-type jobInfo struct {
-	job     string
-	workers int
-}
-type byLen []jobInfo
-
-func (a byLen) Len() int           { return len(a) }
-func (a byLen) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byLen) Less(i, j int) bool { return a[i].workers < a[j].workers }
-
 func a2s(a []string) string {
 	return "[" + strings.Join(a, ", ") + "]"
 }
 
-func (wr workerRequests) Print(name string) {
+func (wr workerRequests) String() string {
 
 	ws := make([]string, 0, len(wr))
 	for w := range wr {
 		ws = append(ws, w)
 	}
 	sort.Strings(ws)
-	fmt.Printf("%s = {\n", name)
+
+	buf := &bytes.Buffer{}
+	fmt.Fprintln(buf, "{")
 	for _, w := range ws {
-		fmt.Printf("   %s : %s\n", w, a2s(wr[w]))
+		fmt.Fprintf(buf, "   %s : %s\n", w, a2s(wr[w]))
 	}
-	fmt.Printf("}\n")
+	fmt.Fprintln(buf, "}")
+	return buf.String()
 }
-func (jw jobWorkers) Print(name string) {
+func (jw jobWorkers) String() string {
 
 	jobs := make([]string, 0, len(jw))
 	for j := range jw {
@@ -45,11 +40,13 @@ func (jw jobWorkers) Print(name string) {
 	}
 	sort.Strings(jobs)
 
-	fmt.Printf("%s = {\n", name)
+	buf := &bytes.Buffer{}
+	fmt.Fprintln(buf, "{")
 	for _, j := range jobs {
-		fmt.Printf("   %s : %s\n", j, a2s(jw[j]))
+		fmt.Fprintf(buf, "   %s : %s\n", j, a2s(jw[j]))
 	}
-	fmt.Printf("}\n")
+	fmt.Fprintln(buf, "}")
+	return buf.String()
 }
 
 // return a map: job -> number of request with the job
@@ -74,18 +71,19 @@ func (wr workerRequests) jobWorkers() jobWorkers {
 func (jw jobWorkers) order() []string {
 	var m = make([]jobInfo, 0, len(jw))
 	for j, w := range jw {
-		m = append(m, jobInfo{j, len(w)})
+		m = append(m, jobInfo{JobKey(j), len(w)})
 	}
 	sort.Sort(byLen(m))
 	a := make([]string, 0, len(jw))
 	for _, i := range m {
-		a = append(a, i.job)
+		a = append(a, string(i.jobkey))
 	}
 	return a
 
 }
 
-func main() {
+func TestMain(t *testing.T) {
+
 	src := workerRequests{
 		"w1": requests{"j1", "j2", "j4", "j6", "j9"},
 		"w2": requests{"j1", "j2", "j4", "j6", "j8"},
@@ -95,13 +93,13 @@ func main() {
 	for w := range src {
 		dst[w] = requests{}
 	}
-	src.Print("src")
+	t.Logf("src = %s", src)
 
 	for iter := 0; ; iter++ {
 		fmt.Printf("====  ITER %d  ==================\n", iter+1)
 
 		jw := src.jobWorkers()
-		jw.Print("jobs")
+		t.Logf("jobs = %s\n", jw)
 
 		ord := jw.order()
 		fmt.Printf("ord = %s\n", a2s(ord))
@@ -144,7 +142,7 @@ func main() {
 			dst[w] = append(dst[w], j)
 		}
 
-		src.Print("src")
-		dst.Print("dst")
+		t.Logf("src = %s", src)
+		t.Logf("dst = %s", dst)
 	}
 }

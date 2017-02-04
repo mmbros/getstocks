@@ -30,44 +30,20 @@ type StockSource struct {
 }
 
 // ----------------------------------------------------------------------------
-/*
-// Request inteface.
-type Request interface {
-	JobID() JobKey
-	WorkerID() WorkerKey
-}
-
-// Response is the interface that must be matched by the results of the Work function.
-type Response interface {
-	// Success return true in case of a success response.
-	// In this case no other Request will be worked for the same Job.
-	Success() bool
-}
-
-// WorkFunc is the worker function.
-type WorkFunc func(context.Context, Request) Response
-
-// Worker is ...
-type Worker struct {
-	WorkerID  WorkerKey
-	Instances int
-	Work      WorkFunc
-}
-*/
 type request struct {
-	scraperName string
-	stockName   string
-	URL         string
-}
-
-func (req *request) WorkerID() workers.WorkerKey { return workers.WorkerKey(req.scraperName) }
-func (req *request) JobID() workers.JobKey       { return workers.JobKey(req.stockName) }
-
-type Response struct {
 	ScraperName string
 	StockName   string
 	URL         string
-	Result      *parseResult
+}
+
+func (req *request) WorkerID() workers.WorkerKey { return workers.WorkerKey(req.ScraperName) }
+func (req *request) JobID() workers.JobKey       { return workers.JobKey(req.StockName) }
+
+type Response struct {
+	request
+	parseResult
+
+	ScraperInst int
 	TimeStart   time.Time
 	TimeEnd     time.Time
 	Err         error
@@ -78,18 +54,15 @@ func (res *Response) Success() bool { return res.Err == nil }
 func (res *Response) Log() {
 
 	contextLogger := log.WithFields(log.Fields{
-		"scraper":   res.ScraperName,
-		"stock":     res.StockName,
-		"timestart": res.TimeStart,
-		"timeend":   res.TimeEnd,
-		"url":       res.URL,
+		"scraper":      res.ScraperName,
+		"scraper_inst": res.ScraperInst,
+		"stock":        res.StockName,
+		"url":          res.URL,
+		"stock_date":   res.DateStr,
+		"stock_price":  res.PriceStr,
+		"time_start":   res.TimeStart,
+		"time_end":     res.TimeEnd,
 	})
-	if res.Result != nil {
-		contextLogger = contextLogger.WithFields(log.Fields{
-			"date":  res.Result.DateStr,
-			"price": res.Result.PriceStr,
-		})
-	}
 	if res.Err != nil {
 		if res.Err == context.Canceled {
 			contextLogger.Info("SKIP")
@@ -158,7 +131,7 @@ func getUrl(ctx context.Context, url string) (*http.Response, error) {
 }
 
 //type WorkFunc func(context.Context, Request) Response
-func scraperWorkFunc(ctx context.Context, wreq workers.Request) workers.Response {
+func scraperWorkFunc(ctx context.Context, workerInst int, wreq workers.Request) workers.Response {
 
 	//workers.Request -> *request
 	//workers.Response -> Response
@@ -166,9 +139,8 @@ func scraperWorkFunc(ctx context.Context, wreq workers.Request) workers.Response
 
 	// init the result
 	response := &Response{
-		ScraperName: req.scraperName,
-		StockName:   req.stockName,
-		URL:         req.URL,
+		request:     *req,
+		ScraperInst: workerInst,
 		TimeStart:   time.Now(),
 	}
 	// use defer to set timeEnd
@@ -196,8 +168,8 @@ func scraperWorkFunc(ctx context.Context, wreq workers.Request) workers.Response
 		return response
 	}
 	// parse the response
-	parseFunc := getParseDocFunc(req.scraperName)
-	response.Result, err = parseFunc(doc)
+	parseFunc := getParseDocFunc(req.ScraperName)
+	response.parseResult, err = parseFunc(doc)
 	if err != nil {
 		response.Err = err
 		return response
@@ -243,8 +215,8 @@ func Execute(ctx context.Context, scrapers []*Scraper, stocks []*Stock) (<-chan 
 			}
 
 			r := &request{
-				scraperName: src.Scraper,
-				stockName:   stock.Name,
+				ScraperName: src.Scraper,
+				StockName:   stock.Name,
 				URL:         src.URL,
 			}
 			reqs = append(reqs, r)
