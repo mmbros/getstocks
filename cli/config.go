@@ -252,7 +252,14 @@ func doJob(scrapers []*run.Scraper, stocks []*run.Stock) error {
 	if err != nil {
 		return err
 	}
+
+	results := make([]*run.Response, 0, len(stocks))
+
 	for r := range out {
+		results = append(results, r)
+	}
+
+	for _, r := range results {
 		var sPrice, sDate string
 
 		if r.Result != nil {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mmbros/getstocks/workers"
+	log "github.com/sirupsen/logrus"
 )
 
 type Scraper struct {
@@ -73,6 +74,33 @@ type Response struct {
 }
 
 func (res *Response) Success() bool { return res.Err == nil }
+
+func (res *Response) Log() {
+
+	contextLogger := log.WithFields(log.Fields{
+		"scraper":   res.ScraperName,
+		"stock":     res.StockName,
+		"timestart": res.TimeStart,
+		"timeend":   res.TimeEnd,
+		"url":       res.URL,
+	})
+	if res.Result != nil {
+		contextLogger = contextLogger.WithFields(log.Fields{
+			"date":  res.Result.DateStr,
+			"price": res.Result.PriceStr,
+		})
+	}
+	if res.Err != nil {
+		if res.Err == context.Canceled {
+			contextLogger.Info("SKIP")
+		} else {
+			contextLogger.Error(res.Err)
+		}
+	} else {
+		contextLogger.Info("SUCCESS")
+	}
+
+}
 
 // ----------------------------------------------------------------------------
 
@@ -146,6 +174,8 @@ func scraperWorkFunc(ctx context.Context, wreq workers.Request) workers.Response
 	// use defer to set timeEnd
 	defer func() {
 		response.TimeEnd = time.Now()
+
+		response.Log()
 	}()
 
 	// get the http response
