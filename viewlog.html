@@ -1,0 +1,75 @@
+<html>
+	<head>
+<meta charset="utf-8">
+<title>GetStock log viewer</title>
+<style type="text/css">
+svg {
+  font-family: "Helvetica Neue", Helvetica;
+	  border: 1px solid red;
+}
+.success {
+	fill: blue;
+}
+.error {
+	fill: red;
+}
+.skip {
+	fill: gray;
+}
+
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+}
+</style>
+	</head>
+	<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+var m = [20, 20, 30, 20],  // margins [0:top, 1:right, 2:bottom, 3:left]
+	w = 800 - m[1] - m[3], // inner width
+	h = 400 - m[0] - m[2]; // inner height
+
+// domain limits
+// x: from left to right
+// y: from top to bottom !!!
+var xmin = -200,
+	xmax =  200,
+	ymin = -100,
+	ymax =  100;
+
+// xs and ys scales
+var xs = d3.scaleLinear().domain([xmin, xmax]).range([0, w]),
+    ys = d3.scaleLinear().domain([ymin, ymax]).range([0, h]);
+
+// rounded rect radius
+var rectRx = xs(xmin+3),
+	rectRy = ys(ymin+3);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", w + m[1] + m[3])
+    .attr("height", h + m[0] + m[2])
+  .append("g")
+    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+
+// append rounded rect
+function rrect(className, x, y, w, h) {
+	svg.append("rect")
+		.classed(className, true)
+		.attr("rx", rectRx)
+		.attr("ry", rectRy)
+		.attr("x", xs(x))
+		.attr("y", ys(y))
+		.attr("width", xs(xmin+w))
+		.attr("height", ys(ymin+h));
+}
+
+rrect("success", 0,  0, 100, 10);
+rrect("skip", 10, 20, 100, 10);
+rrect("error", 20, 40, 100, 10);
+
+</script>
+	</body>
+</html>
