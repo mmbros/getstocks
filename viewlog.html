@@ -1,0 +1,232 @@
+<html>
+	<head>
+<meta charset="utf-8">
+<title>GetStock log viewer</title>
+<style type="text/css">
+svg {
+  font-family: "Helvetica Neue", Helvetica;
+	  border: 1px solid red;
+}
+.success {
+	fill: blue;
+}
+.error {
+	fill: red;
+}
+.skip {
+	fill: gray;
+}
+
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+}
+</style>
+	</head>
+	<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var data =  [
+{"level":"info","msg":"PROGRAM START","time":"2017-02-06T16:30:41+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":1,"stock":"ANIMA CED AP 21 2 P","stock_date":"27/01/17 1.00.00","stock_price":"10,222","time":"2017-02-06T16:30:41+01:00","time_end":"2017-02-06T16:30:41.932362648+01:00","time_start":"2017-02-06T16:30:41.720511552+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA TR 2017 C4 2 P","stock_date":"27/01/17 1.00.00","stock_price":"5,263","time":"2017-02-06T16:30:41+01:00","time_end":"2017-02-06T16:30:41.939321506+01:00","time_start":"2017-02-06T16:30:41.719559781+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":2,"stock":"BTP 3.75 AGO 2021","stock_date":"06/02/17 16.10.07","stock_price":"112,78","time":"2017-02-06T16:30:41+01:00","time_end":"2017-02-06T16:30:41.977744175+01:00","time_start":"2017-02-06T16:30:41.720453765+01:00"},
+{"level":"info","msg":"SKIP","scraper":"finanza.repubblica.it","scraper_inst":0,"stock":"BTP 3.75 AGO 2021","stock_date":"","stock_price":"","time":"2017-02-06T16:30:41+01:00","time_end":"2017-02-06T16:30:41.978716207+01:00","time_start":"2017-02-06T16:30:41.717618436+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"ANIMA TRA 19 PLUS2 P","stock_date":"27/01/2017","stock_price":"5,368","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.151972034+01:00","time_start":"2017-02-06T16:30:41.719384624+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"ANIMA TR 2017 C4 2 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.152159583+01:00","time_start":"2017-02-06T16:30:42.152156101+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA TRA 19 GLOB2 P","stock_date":"27/01/2017","stock_price":"5,0520","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.227783017+01:00","time_start":"2017-02-06T16:30:41.720471898+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.milanofinanza.it","scraper_inst":1,"stock":"ANIMA TRA 19 GLOB2 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.228590627+01:00","time_start":"2017-02-06T16:30:41.932510172+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.eurotlx.com","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"03-02-2017","stock_price":"90,68","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.347193637+01:00","time_start":"2017-02-06T16:30:41.718046527+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.348876905+01:00","time_start":"2017-02-06T16:30:42.152487676+01:00"},
+{"level":"info","msg":"SKIP","scraper":"finanza.repubblica.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.349195476+01:00","time_start":"2017-02-06T16:30:41.980373427+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"27/01/17 1.00.00","stock_price":"5,158","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.494915267+01:00","time_start":"2017-02-06T16:30:41.939541468+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.495261529+01:00","time_start":"2017-02-06T16:30:41.720572482+01:00"},
+{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":2,"stock":"ANIMA CED AP 22 1 P","stock_date":"27/01/17 1.00.00","stock_price":"10,063","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.514374243+01:00","time_start":"2017-02-06T16:30:41.97791986+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA CED AP 22 1 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.51451772+01:00","time_start":"2017-02-06T16:30:42.495934493+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA CED AP 21 2 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.51457283+01:00","time_start":"2017-02-06T16:30:42.51457115+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA CED AP 22 1 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.51693114+01:00","time_start":"2017-02-06T16:30:42.227913065+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA TRA 19 PLUS2 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.517006949+01:00","time_start":"2017-02-06T16:30:42.517004592+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.517039087+01:00","time_start":"2017-02-06T16:30:42.517038086+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA CED AP 21 2 P","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.517073457+01:00","time_start":"2017-02-06T16:30:42.517072338+01:00"},
+{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"","stock_price":"","time":"2017-02-06T16:30:42+01:00","time_end":"2017-02-06T16:30:42.517129789+01:00","time_start":"2017-02-06T16:30:42.517128655+01:00"},
+{"level":"info","msg":"PROGRAM FINISH","time":"2017-02-06T16:30:42+01:00"}
+]
+
+function getWorkerName(scraper, inst) {
+	return scraper + "-" + inst;
+}
+
+function Worker(scraper, inst){
+	this.scraper = scraper;
+	this.inst = inst;
+	this.jobs = [];
+
+}
+Worker.prototype.addJob = function(job) {
+	this.jobs.push(job);
+}
+
+
+var workers = {}
+var program_time_start, program_time_finish;
+
+for (i=0; i<data.length; i++){
+	d = data[i];
+	/*
+	if ("scraper" in d) {
+		var t1 = new Date(d.time_start);
+		var t2 = new Date(d.time_end);
+		var elapsed = t2.getTime()-t1.getTime();
+
+		console.log(t1, t2, elapsed);
+	}
+	*/
+
+	if ("scraper" in d) {
+		var wname = getWorkerName(d.scraper, d.scraper_inst);
+		if (!(wname in workers)) {
+			workers[wname] = new Worker(d.scraper, d.scraper_inst);
+		}
+		workers[wname].addJob(d);
+	} else if (d.msg == "PROGRAM START") {
+		program_time_start = (new Date(d.time)).getTime();
+	} else if (d.msg == "PROGRAM FINISH") {
+		program_time_finish = (new Date(d.time)).getTime();
+	}
+
+}
+
+
+var wnames = Object.keys(workers).sort();
+console.log(wnames);
+var totWorkers = wnames.length;
+for (var i=0; i<totWorkers; i++) {
+	console.log(workers[wnames[i]]);
+}
+var tmin = 0,
+	tmax = 0;
+for (var w=0; w<totWorkers; w++) {
+	var worker = workers[wnames[w]];
+	for (var j=0; j<worker.jobs.length; j++){
+		var job = worker.jobs[j];
+		var t1 = (new Date(job.time_start)).getTime();
+		var t2 = (new Date(job.time_end)).getTime();
+		if (t1<tmin || tmin==0){
+			tmin = t1;
+		}
+		if (t2>tmax || tmax==0){
+			tmax = t2;
+		}
+	}
+}
+
+console.log("program_time_start", program_time_start);
+console.log("program_time_finish", program_time_finish);
+
+console.log("tmin", tmin);
+console.log("tmax", tmax);
+
+// ----------------------------------------------------------------------------
+
+
+var m = [20, 20, 30, 20],  // margins [0:top, 1:right, 2:bottom, 3:left]
+	w = 800 - m[1] - m[3], // inner width
+	h = 400 - m[0] - m[2]; // inner height
+
+
+var DY = 10;
+
+// domain limits
+// x: from left to right
+// y: from top to bottom !!!
+var xmin = tmin,
+	xmax = tmax,
+	ymin = 0,
+	ymax = DY * totWorkers;
+
+// xs and ys scales
+var xs = d3.scaleLinear().domain([xmin, xmax]).range([0, w]),
+    ys = d3.scaleLinear().domain([ymin, ymax]).range([0, h]);
+
+console.log("ymax", ymax);
+console.log("ys(DY)", ys(DY));
+
+
+// rounded rect radius
+var rectRx =15, 
+	rectRy = ys(DY)/2;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", w + m[1] + m[3])
+    .attr("height", h + m[0] + m[2])
+  .append("g")
+    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+
+// append rounded rect
+function rrect(className, x, y, w, h) {
+	svg.append("rect")
+		.classed(className, true)
+		.attr("rx", rectRx)
+		.attr("ry", rectRy)
+		.attr("x", xs(x))
+		.attr("y", ys(y))
+		.attr("width", xs(xmin+w))
+		.attr("height", ys(ymin+h));
+}
+
+
+/*
+rrect("success", 0,  0, 100, 10);
+rrect("skip", 10, 20, 100, 10);
+rrect("error", 20, 40, 100, 10);
+*/
+
+for (var w=0; w<totWorkers; w++) {
+	var worker = workers[wnames[w]];
+	for (var j=0; j<worker.jobs.length; j++){
+		var job = worker.jobs[j];
+
+		var t1 = (new Date(job.time_start)).getTime();
+		var t2 = (new Date(job.time_end)).getTime();
+//		console.log("t1", t1, "t2", t2, "elapsed", t2-t1);
+
+		var x = t1, y = DY*(w+0.2), dx=t2-t1, dy=DY*0.6;
+//		console.log("x", x, "y", y, "dx", dx, "dy", dy);
+		var className = "success";
+		if (job.level == "error"){
+			className = "error";
+		} else if (job.msg == "SKIP"){
+			className = "skip";
+		}
+		rrect(className, x, y, dx, dy);
+		svg.append("text")
+			.attr("x", xs(x)+8)
+			.attr("y", ys(y+4))
+			.attr("font-family", "sans-serif")
+			.attr("font-size", "10px")
+			.attr("text-anchor", "left")
+			.attr("fill", "white")
+			.text(job.stock);
+
+
+	}
+
+		svg.append("text")
+			.attr("x", 0)
+			.attr("y", ys(y-1))
+			.attr("font-family", "sans-serif")
+			.attr("font-size", "10px")
+			.attr("text-anchor", "left")
+			.attr("fill", "black")
+			.text(wnames[w]);
+}
+
+
+// ------------------------
+
+</script>
+	</body>
+</html>
