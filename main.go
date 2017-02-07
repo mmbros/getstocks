@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/mmbros/getstocks/cli"
 	log "github.com/sirupsen/logrus"
@@ -18,7 +19,7 @@ func initLog(filename string) *os.File {
 		return nil
 	}
 	log.SetOutput(f)
-	log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 	return f
 }
 
