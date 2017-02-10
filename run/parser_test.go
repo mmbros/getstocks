@@ -3,6 +3,7 @@ package run
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
@@ -47,6 +48,7 @@ func TestParsers(t *testing.T) {
 		{"www.milanofinanza.it", "www.milanofinanza.it.html", "5,048", "20/01/17 1.00.00"},
 		{"www.morningstar.it", "www.morningstar.it.html", "5,158", "27/01/2017"},
 		{"www.teleborsa.it", "www.teleborsa.it.html", "5,368", "27/01/2017"},
+		{"www.mpscapitalservices.it", "www.mpscapitalservices.it.html", "103.58", "30/01/2017"},
 	}
 	for _, tc := range testCases {
 
@@ -72,4 +74,23 @@ func TestParsers(t *testing.T) {
 		}
 	}
 
+}
+func TestParserRule(t *testing.T) {
+	var filename = "www.mpscapitalservices.it.html"
+	var s string
+
+	path := getpath(filename)
+	doc, err := newDocumentFromFile(path)
+	if err != nil {
+		t.Fatal(filename, err)
+	}
+
+	s = doc.Find("#Official td.top").Text()
+	t.Logf("PriceStr: %s", s)
+
+	s = doc.Find("#lbMercato").Parent().Text()
+	s = strings.TrimSpace(s)
+	s = s[len(s)-10:]
+
+	t.Logf("DateStr: %s", s)
 }

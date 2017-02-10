@@ -20,12 +20,13 @@ type parseDocFunc func(doc *goquery.Document) (parseResult, error)
 
 func getParseDocFunc(scraperName string) parseDocFunc {
 	var m = map[string]parseDocFunc{
-		"finanza.repubblica.it": parseFinanzaRepubblicaIt,
-		"www.borse.it":          parseWwwBorseIt,
-		"www.eurotlx.com":       parseWwwEurotlxCom,
-		"www.milanofinanza.it":  parseWwwMilanofinanzaIt,
-		"www.morningstar.it":    parseWwwMorningstarIt,
-		"www.teleborsa.it":      parseWwwTeleborsaIt,
+		"finanza.repubblica.it":     parseFinanzaRepubblicaIt,
+		"www.borse.it":              parseWwwBorseIt,
+		"www.eurotlx.com":           parseWwwEurotlxCom,
+		"www.milanofinanza.it":      parseWwwMilanofinanzaIt,
+		"www.morningstar.it":        parseWwwMorningstarIt,
+		"www.teleborsa.it":          parseWwwTeleborsaIt,
+		"www.mpscapitalservices.it": parseWwwMpsCapitalServicesIt,
 	}
 	return m[scraperName]
 }
@@ -229,6 +230,33 @@ func parseWwwMorningstarIt(doc *goquery.Document) (parseResult, error) {
 		}
 		return true
 	})
+
+	if err := res.setPriceAndDate("02/01/2006"); err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+// <div class="LeftItem" style="color: #74002A;">
+//     <span id="lbMercato" style="margin-right:10px;"><strong>Mercato:</strong> DDT</span>
+//	   <strong>Ultimo aggiornamento dati:</strong> ora 21.54 del 30/01/2017
+// </div>
+//
+//<table id="TableQuotazione" class="tabProdotto">
+//    <caption>
+//        Quotazione
+//    </caption><tr id="Official">
+//        <th class="top">Chiusura Giorno Precedente</th><td class="top">103.58</td>
+func parseWwwMpsCapitalServicesIt(doc *goquery.Document) (parseResult, error) {
+	res := parseResult{}
+
+	res.PriceStr = doc.Find("#Official td.top").Text()
+
+	s := strings.TrimSpace(doc.Find("#lbMercato").Parent().Text())
+	if len(s) >= 10 {
+		s = s[len(s)-10:]
+	}
+	res.DateStr = s
 
 	if err := res.setPriceAndDate("02/01/2006"); err != nil {
 		return res, err
