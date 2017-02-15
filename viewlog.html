@@ -8,13 +8,16 @@ svg {
 	  border: 1px solid red;
 }
 .success {
-	fill: blue;
+	stroke-width: 4px;
+	stroke: black;
 }
 .error {
-	fill: red;
+	stroke-width: 4px;
+	stroke: red;
 }
 .skip {
-	fill: gray;
+
+	stroke-width: 0px;
 }
 
 .line {
@@ -101,11 +104,10 @@ for (i=0; i<data.length; i++){
 var wnames = Object.keys(workers).sort();
 console.log(wnames);
 var totWorkers = wnames.length;
-for (var i=0; i<totWorkers; i++) {
-	console.log(workers[wnames[i]]);
-}
+
 var tmin = 0,
 	tmax = 0;
+
 for (var w=0; w<totWorkers; w++) {
 	var worker = workers[wnames[w]];
 	for (var j=0; j<worker.jobs.length; j++){
@@ -126,6 +128,31 @@ console.log("program_time_finish", program_time_finish);
 
 console.log("tmin", tmin);
 console.log("tmax", tmax);
+
+// ----------------------------------------------------------------------------
+
+var stocks={}, len=0;
+
+for (i=0; i<data.length; i++){
+	d = data[i];
+/*
+	if ("stock" in d) {
+		var count = stocks[d.stock]
+		if (count === undefined) {
+			count = 1
+		} else {
+			count++
+		}
+		stocks[d.stock] = count
+	}
+*/
+	if ("stock" in d) {
+		if (!(d.stock in stocks)){
+			stocks[d.stock] = len++; 
+		}
+	}
+}
+console.log(stocks);
 
 // ----------------------------------------------------------------------------
 
@@ -179,6 +206,18 @@ function rrect(className, x, y, w, h) {
 		.attr("height", ys(ymin+h));
 }
 
+// append rounded rect
+function rrectColor(className, color, x, y, w, h) {
+	svg.append("rect")
+		.classed(className, true)
+		.attr("fill", color)
+		.attr("rx", rectRx)
+		.attr("ry", rectRy)
+		.attr("x", xs(x))
+		.attr("y", ys(y))
+		.attr("width", xs(xmin+w))
+		.attr("height", ys(ymin+h));
+}
 
 // https://github.com/d3/d3-scale/blob/master/README.md#schemeCategory20
 // var color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -200,8 +239,10 @@ for (var w=0; w<totWorkers; w++) {
 		} else if (job.msg == "SKIP"){
 			className = "skip";
 		}
+		color = d3.schemeCategory10[stocks[job.stock]]
+
 		if (dx > 0){
-			rrect(className, x, y, dx, dy);
+			rrectColor(className, color, x, y, dx, dy);
 			svg.append("text")
 				.attr("x", xs(x)+8)
 				.attr("y", ys(y+4))
