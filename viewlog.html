@@ -30,31 +30,26 @@ svg {
 	<body>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
-
-var data =  [
-{"level":"info","msg":"PROGRAM START","time":"2017-02-08T09:14:52.642620495+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.eurotlx.com","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"07-02-2017","stock_price":"90,68","time":"2017-02-08T09:14:52.713840926+01:00","time_end":"2017-02-08T09:14:52.71381364+01:00","time_start":"2017-02-08T09:14:52.648517354+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"finanza.repubblica.it","scraper_inst":0,"stock":"BTP 3.75 AGO 2021","stock_date":"07/02/2017","stock_price":"112,900","time":"2017-02-08T09:14:53.011997713+01:00","time_end":"2017-02-08T09:14:53.011965086+01:00","time_start":"2017-02-08T09:14:52.650608959+01:00"},
-{"level":"info","msg":"SKIP","scraper":"finanza.repubblica.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.012206811+01:00","time_end":"2017-02-08T09:14:53.012195344+01:00","time_start":"2017-02-08T09:14:53.012191358+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"BTP 3.75 AGO 2021","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.012486959+01:00","time_end":"2017-02-08T09:14:53.012474883+01:00","time_start":"2017-02-08T09:14:52.64967466+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"ANIMA TR 2017 C4 2 P","stock_date":"03/02/2017","stock_price":"5,26","time":"2017-02-08T09:14:53.086761501+01:00","time_end":"2017-02-08T09:14:53.086742873+01:00","time_start":"2017-02-08T09:14:52.645232732+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.milanofinanza.it","scraper_inst":1,"stock":"ANIMA TR 2017 C4 2 P","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.089102857+01:00","time_end":"2017-02-08T09:14:53.089083633+01:00","time_start":"2017-02-08T09:14:52.651953394+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA TRA 19 GLOB2 P","stock_date":"03/02/2017","stock_price":"5,0400","time":"2017-02-08T09:14:53.110784837+01:00","time_end":"2017-02-08T09:14:53.110775689+01:00","time_start":"2017-02-08T09:14:52.647051589+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":2,"stock":"ANIMA TRA 19 GLOB2 P","stock_date":"03/02/17 1.00.00","stock_price":"5,04","time":"2017-02-08T09:14:53.123673478+01:00","time_end":"2017-02-08T09:14:53.123664198+01:00","time_start":"2017-02-08T09:14:52.651879268+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":1,"stock":"ANIMA CED AP 22 1 P","stock_date":"03/02/17 1.00.00","stock_price":"10,017","time":"2017-02-08T09:14:53.52638927+01:00","time_end":"2017-02-08T09:14:53.526376701+01:00","time_start":"2017-02-08T09:14:53.089223809+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"03/02/17 1.00.00","stock_price":"5,147","time":"2017-02-08T09:14:53.52877358+01:00","time_end":"2017-02-08T09:14:53.528761472+01:00","time_start":"2017-02-08T09:14:53.012652238+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.529342093+01:00","time_end":"2017-02-08T09:14:53.529333346+01:00","time_start":"2017-02-08T09:14:52.648034263+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA CED AP 22 1 P","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.529423361+01:00","time_end":"2017-02-08T09:14:53.529416838+01:00","time_start":"2017-02-08T09:14:53.529414328+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.milanofinanza.it","scraper_inst":2,"stock":"ANIMA CED AP 21 2 P","stock_date":"03/02/17 1.00.00","stock_price":"10,16","time":"2017-02-08T09:14:53.545805993+01:00","time_end":"2017-02-08T09:14:53.545792193+01:00","time_start":"2017-02-08T09:14:53.123740959+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA CED AP 21 2 P","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.551920136+01:00","time_end":"2017-02-08T09:14:53.551908368+01:00","time_start":"2017-02-08T09:14:53.110851064+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA CED AP 21 2 P","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.552266714+01:00","time_end":"2017-02-08T09:14:53.545978328+01:00","time_start":"2017-02-08T09:14:53.529655108+01:00"},
-{"level":"info","msg":"SUCCESS","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA TRA 19 PLUS2 P","stock_date":"03/02/2017","stock_price":"5,3550","time":"2017-02-08T09:14:53.975398923+01:00","time_end":"2017-02-08T09:14:53.975383567+01:00","time_start":"2017-02-08T09:14:53.551988936+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA CED AP 22 1 P","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.975586889+01:00","time_end":"2017-02-08T09:14:53.975577242+01:00","time_start":"2017-02-08T09:14:53.975573023+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.975661494+01:00","time_end":"2017-02-08T09:14:53.975653168+01:00","time_start":"2017-02-08T09:14:53.97564106+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.borse.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.97571857+01:00","time_end":"2017-02-08T09:14:53.975711208+01:00","time_start":"2017-02-08T09:14:53.975708997+01:00"},
-{"level":"info","msg":"SKIP","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"ANIMA TRA 19 PLUS2 P","stock_date":"","stock_price":"","time":"2017-02-08T09:14:53.975724884+01:00","time_end":"2017-02-08T09:14:53.97571117+01:00","time_start":"2017-02-08T09:14:53.086971915+01:00"},
-{"level":"info","msg":"PROGRAM FINISH","time":"2017-02-08T09:14:53.975859841+01:00"},
-]
+var data = {
+	"start":"2017-02-19T21:44:18.974559583+01:00",
+	"finish":"2017-02-19T21:44:20.280584959+01:00",
+	"events":[
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:19.340691987+01:00","time_start":"2017-02-19T21:44:18.978691981+01:00","time_end":"2017-02-19T21:44:19.340673956+01:00","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"BTP 3.75 AGO 2021","stock_date":"17/02/17 18.02.17","stock_price":"112,98"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:19.494628122+01:00","time_start":"2017-02-19T21:44:18.978477734+01:00","time_end":"2017-02-19T21:44:19.494594691+01:00","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"ANIMA TR 2017 C4 2 P","stock_date":"10/02/2017","stock_price":"5,257"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:19.5698199+01:00","time_start":"2017-02-19T21:44:18.978586424+01:00","time_end":"2017-02-19T21:44:19.569727643+01:00","scraper":"www.eurotlx.com","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0","stock_date":"08-02-2017","stock_price":"90,68"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:19.570550717+01:00","time_start":"2017-02-19T21:44:18.97839834+01:00","time_end":"2017-02-19T21:44:19.570438168+01:00","scraper":"finanza.repubblica.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:19.570890146+01:00","time_start":"2017-02-19T21:44:19.57087859+01:00","time_end":"2017-02-19T21:44:19.570888626+01:00","scraper":"finanza.repubblica.it","scraper_inst":0,"stock":"BTP 3.75 AGO 2021"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:19.653982115+01:00","time_start":"2017-02-19T21:44:19.341005326+01:00","time_end":"2017-02-19T21:44:19.653973035+01:00","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT","stock_date":"10/02/17 1.00.00","stock_price":"5,152"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:19.654074082+01:00","time_start":"2017-02-19T21:44:19.654055823+01:00","time_end":"2017-02-19T21:44:19.654057781+01:00","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA TR 2017 C4 2 P"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:19.741817598+01:00","time_start":"2017-02-19T21:44:18.98055157+01:00","time_end":"2017-02-19T21:44:19.741782282+01:00","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA CED AP 22 1 P","stock_date":"10/02/2017","stock_price":"10,045"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:19.742088179+01:00","time_start":"2017-02-19T21:44:19.741978339+01:00","time_end":"2017-02-19T21:44:19.742061461+01:00","scraper":"www.morningstar.it","scraper_inst":0,"stock":"ANIMA T 2021 GLB PT"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:19.992531015+01:00","time_start":"2017-02-19T21:44:19.654115742+01:00","time_end":"2017-02-19T21:44:19.992518069+01:00","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA TRA 19 GLOB2 P","stock_date":"10/02/17 1.00.00","stock_price":"5,043"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:19.9926156+01:00","time_start":"2017-02-19T21:44:19.992574759+01:00","time_end":"2017-02-19T21:44:19.992610144+01:00","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA CED AP 22 1 P"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:19.992770475+01:00","time_start":"2017-02-19T21:44:18.979503299+01:00","time_end":"2017-02-19T21:44:19.992761153+01:00","scraper":"www.borse.it","scraper_inst":0,"stock":"ANIMA TRA 19 GLOB2 P"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:20.085102168+01:00","time_start":"2017-02-19T21:44:19.494871376+01:00","time_end":"2017-02-19T21:44:20.085090231+01:00","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"ANIMA TRA 19 PLUS2 P","stock_date":"10/02/2017","stock_price":"5,36"},
+		{"level":"info","msg":"SKIP","time":"2017-02-19T21:44:20.085166474+01:00","time_start":"2017-02-19T21:44:20.08515962+01:00","time_end":"2017-02-19T21:44:20.085161662+01:00","scraper":"www.teleborsa.it","scraper_inst":0,"stock":"BMPS 15/19 EM1 2.0"},
+		{"level":"info","msg":"SUCCESS","time":"2017-02-19T21:44:20.280109752+01:00","time_start":"2017-02-19T21:44:19.992636401+01:00","time_end":"2017-02-19T21:44:20.280071281+01:00","scraper":"www.milanofinanza.it","scraper_inst":0,"stock":"ANIMA CED AP 21 2 P","stock_date":"10/02/17 1.00.00","stock_price":"10,134"}
+	]}
 
 function getWorkerName(scraper, inst) {
 	return scraper + "-" + inst;
@@ -71,33 +66,24 @@ Worker.prototype.addJob = function(job) {
 }
 
 
-var workers = {}
-var program_time_start, program_time_finish;
+var program_time_start = (new Date(data.start)).getTime();
+var program_time_finish = (new Date(data.finish)).getTime();
+console.log("program_time_start", program_time_start);
+console.log("program_time_finish", program_time_finish);
 
-for (i=0; i<data.length; i++){
-	d = data[i];
-	/*
-	if ("scraper" in d) {
-		var t1 = new Date(d.time_start);
-		var t2 = new Date(d.time_end);
-		var elapsed = t2.getTime()-t1.getTime();
 
-		console.log(t1, t2, elapsed);
+var workers={}, stocks={}, stocks_len=0;
+for (i=0; i<data.events.length; i++){
+	var e = data.events[i];
+	var wname = getWorkerName(e.scraper, e.scraper_inst);
+	if (!(wname in workers)) {
+		workers[wname] = new Worker(e.scraper, e.scraper_inst);
 	}
-	*/
+	workers[wname].addJob(e);
 
-	if ("scraper" in d) {
-		var wname = getWorkerName(d.scraper, d.scraper_inst);
-		if (!(wname in workers)) {
-			workers[wname] = new Worker(d.scraper, d.scraper_inst);
-		}
-		workers[wname].addJob(d);
-	} else if (d.msg == "PROGRAM START") {
-		program_time_start = (new Date(d.time)).getTime();
-	} else if (d.msg == "PROGRAM FINISH") {
-		program_time_finish = (new Date(d.time)).getTime();
+	if (!(e.stock in stocks)){
+		stocks[e.stock] = stocks_len++;
 	}
-
 }
 
 
@@ -105,53 +91,6 @@ var wnames = Object.keys(workers).sort();
 console.log(wnames);
 var totWorkers = wnames.length;
 
-var tmin = 0,
-	tmax = 0;
-
-for (var w=0; w<totWorkers; w++) {
-	var worker = workers[wnames[w]];
-	for (var j=0; j<worker.jobs.length; j++){
-		var job = worker.jobs[j];
-		var t1 = (new Date(job.time_start)).getTime();
-		var t2 = (new Date(job.time_end)).getTime();
-		if (t1<tmin || tmin==0){
-			tmin = t1;
-		}
-		if (t2>tmax || tmax==0){
-			tmax = t2;
-		}
-	}
-}
-
-console.log("program_time_start", program_time_start);
-console.log("program_time_finish", program_time_finish);
-
-console.log("tmin", tmin);
-console.log("tmax", tmax);
-
-// ----------------------------------------------------------------------------
-
-var stocks={}, len=0;
-
-for (i=0; i<data.length; i++){
-	d = data[i];
-/*
-	if ("stock" in d) {
-		var count = stocks[d.stock]
-		if (count === undefined) {
-			count = 1
-		} else {
-			count++
-		}
-		stocks[d.stock] = count
-	}
-*/
-	if ("stock" in d) {
-		if (!(d.stock in stocks)){
-			stocks[d.stock] = len++; 
-		}
-	}
-}
 console.log(stocks);
 
 // ----------------------------------------------------------------------------
@@ -167,13 +106,10 @@ var DY = 10;
 // domain limits
 // x: from left to right
 // y: from top to bottom !!!
-var xmin = tmin,
-	xmax = tmax,
+var xmin = program_time_start,
+	xmax = program_time_finish,
 	ymin = 0,
 	ymax = DY * totWorkers;
-
-xmin = program_time_start;
-xmax = program_time_finish;
 
 // xs and ys scales
 var xs = d3.scaleLinear().domain([xmin, xmax]).range([0, w]),
