@@ -101,6 +101,11 @@ var m = [20, 20, 30, 20],  // margins [0:top, 1:right, 2:bottom, 3:left]
 	h = 400 - m[0] - m[2]; // inner height
 
 
+var svg = d3.select("body").append("svg")
+    .attr("width", w + m[1] + m[3])
+    .attr("height", h + m[0] + m[2])
+  .append("g")
+    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 var DY = 10;
 
 // domain limits

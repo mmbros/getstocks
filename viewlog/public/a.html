@@ -1,0 +1,156 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>GetStock log viewer</title>
+</head>
+<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+
+var m = [20, 20, 30, 20],  // margins [0:top, 1:right, 2:bottom, 3:left]
+	width = 800 - m[1] - m[3], // inner width
+	height = 400 - m[0] - m[2]; // inner height
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + m[1] + m[3])
+    .attr("height", height + m[0] + m[2])
+  .append("g")
+    .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+
+// ***************************************************************************
+
+
+function getWorkerName(scraper, inst) {
+	return scraper + "-" + inst;
+}
+
+function Worker(scraper, inst){
+	this.scraper = scraper;
+	this.inst = inst;
+	this.jobs = [];
+
+}
+Worker.prototype.addJob = function(job) {
+	this.jobs.push(job);
+}
+
+function showSession(data) {
+	var tmin = (new Date(data.start)).getTime(),
+	    tmax = (new Date(data.finish)).getTime(),
+	    workers = {},
+		stocks = {},
+		stocks_len = 0;
+
+	// init workers and stocks
+	for (var i=0; i<data.events.length; i++){
+		var e = data.events[i];
+		var wname = getWorkerName(e.scraper, e.scraper_inst);
+		if (!(wname in workers)) {
+			workers[wname] = new Worker(e.scraper, e.scraper_inst);
+		}
+		workers[wname].addJob(e);
+
+		if (!(e.stock in stocks)){
+			stocks[e.stock] = stocks_len++;
+		}
+	}
+
+	// sort worker names
+	var wnames = Object.keys(workers).sort();
+	var totWorkers = wnames.length;
+
+	var DY = 10;
+
+	// domain limits
+	// x: from left to right
+	// y: from top to bottom !!!
+	var xmin = tmin,
+		xmax = tmax,
+		ymin = 0,
+		ymax = DY * totWorkers;
+
+	// xs and ys scales
+	var xs = d3.scaleLinear().domain([xmin, xmax]).range([0, width]),
+		ys = d3.scaleLinear().domain([ymin, ymax]).range([0, height]);
+
+	// rounded rect radius
+	var rectRx =15,
+		rectRy = ys(DY)/2;
+
+	for (var w=0; w<totWorkers; w++) {
+		var worker = workers[wnames[w]];
+		for (var j=0; j<worker.jobs.length; j++){
+			var job = worker.jobs[j],
+			    t1 = (new Date(job.time_start)).getTime(),
+			    t2 = (new Date(job.time_end)).getTime(),
+			    x  = t1,
+				y  = DY*(w+0.2),
+				dx = t2-t1,
+				dy = DY*0.6;
+
+			var className = "success";
+			if (job.level == "error"){
+				className = "error";
+			} else if (job.msg == "SKIP"){
+				className = "skip";
+			}
+			var color = d3.schemeCategory10[stocks[job.stock]]
+
+			if (dx > 0){
+				svg.append("rect")
+					.classed(className, true)
+					.attr("fill", color)
+					.attr("rx", rectRx)
+					.attr("ry", rectRy)
+					.attr("x", xs(x))
+					.attr("y", ys(y))
+					.attr("width", xs(xmin+dx))
+					.attr("height", ys(ymin+dy));
+				svg.append("text")
+					.attr("x", xs(x)+8)
+					.attr("y", ys(y+4))
+					.attr("font-family", "sans-serif")
+					.attr("font-size", "10px")
+					.attr("text-anchor", "left")
+					.attr("fill", "white")
+					.text(job.stock);
+			}
+
+		}
+
+		svg.append("text")
+			.attr("x", 0)
+			.attr("y", ys(y-1))
+			.attr("font-family", "sans-serif")
+			.attr("font-size", "10px")
+			.attr("text-anchor", "left")
+			.attr("fill", "black")
+			.text(wnames[w]);
+	}
+
+
+
+}
+// ----------------------------------------------------------------------------
+
+
+function abc(error, json){
+	if (error) {
+		return console.warn(error);
+	}
+	data = json;
+	console.log(data);
+	showSession(data);
+
+}
+
+d3.json("/sessions/2", abc);
+
+
+
+</script>
+<div>Hello script!</div>
+</body>
+</html>

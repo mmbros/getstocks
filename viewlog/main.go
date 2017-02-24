@@ -62,6 +62,32 @@ func jsonGetSessions(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
+func htmlRoot(w http.ResponseWriter, r *http.Request) {
+	txt := `
+<html>
+<head>
+<meta charset="utf-8">
+<title>GetStock log viewer</title>
+</head>
+<body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+function abc(error, json){
+	if (error) {
+		return console.warn(error);
+	}
+	data = json;
+	console.log(data);
+}
+d3.json("http://localhost:8888/sessions/0", abc);
+</script>
+<p>CIAO</p>
+</body>
+</html>`
+	w.Write([]byte(txt))
+}
+
 func logger(inner http.HandlerFunc, name string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -92,6 +118,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/sessions", logger(jsonGetSessions, "jsonGetSessions")).Methods("GET")
 	r.HandleFunc("/sessions/{index}", logger(jsonGetSessionByIndex, "jsonGetSessionByIndex")).Methods("GET")
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 
 	srv := &http.Server{
 		Handler: r,
